@@ -32,6 +32,7 @@ import requests
 from dotenv import load_dotenv
 from PIL import Image, ImageOps
 
+import calculate_cost
 import convert
 import preprocess
 
@@ -44,17 +45,67 @@ OUTPUT_DIR = PROJECT_DIR / "output"
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
 URL = "https://openrouter.ai/api/v1/chat/completions"
-MODEL_CLASSIFIER = os.getenv("OCR_MODEL_CLASSIFIER", "anthropic/claude-haiku-5.5")
-MODEL_PRINTED = os.getenv("OCR_MODEL_PRINTED", "anthropic/claude-haiku-5.5")
-MODEL_HANDWRITTEN = os.getenv("OCR_MODEL_HANDWRITTEN", "anthropic/claude-sonnet-5.5")
-MODEL_SECONDARY = os.getenv("OCR_MODEL_SECONDARY", "openai/gpt-6-luna")
-MODEL_RECHECK = os.getenv("OCR_MODEL_RECHECK", MODEL_HANDWRITTEN)
-MODEL_CROP = os.getenv("OCR_MODEL_CROP", MODEL_PRINTED)
-MODEL_CROP_JUDGE = os.getenv("OCR_MODEL_CROP_JUDGE", MODEL_CLASSIFIER)
-MODEL_ORIENTATION = os.getenv("OCR_MODEL_ORIENTATION", MODEL_CLASSIFIER)
-USE_ORIENTATION_API = os.getenv("OCR_USE_ORIENTATION_API", "0").lower() in {
-    "1", "true", "yes", "on"
+FREE_VISION_PRIMARY = "nvidia/nemotron-3.5-super-vl:free"
+FREE_VISION_SECONDARY = "thinkingmachines/inkling:free"
+FREE_VISION_FALLBACKS = (
+    FREE_VISION_PRIMARY,
+    FREE_VISION_SECONDARY,
+    "google/gemma-4-31b-it:free",
+    "google/gemma-4-26b-a4b-it:free",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "openrouter/free",
+)
+MODEL_PROFILES = {
+    "free": {
+        "classifier": FREE_VISION_SECONDARY,
+        "printed": FREE_VISION_PRIMARY,
+        "handwritten": FREE_VISION_PRIMARY,
+        "secondary": FREE_VISION_SECONDARY,
+        "recheck": FREE_VISION_PRIMARY,
+        "crop": FREE_VISION_PRIMARY,
+        "crop_judge": FREE_VISION_SECONDARY,
+        "mark_blind": FREE_VISION_PRIMARY,
+        "mark_forensic": FREE_VISION_SECONDARY,
+        "mark_judge": FREE_VISION_PRIMARY,
+    },
+    "lite": {
+        "classifier": "anthropic/claude-haiku-5.5",
+        "printed": "anthropic/claude-haiku-5.5",
+        "handwritten": "anthropic/claude-haiku-5.5",
+        "secondary": "openai/gpt-6-luna",
+        "recheck": "anthropic/claude-haiku-5.5",
+        "crop": "anthropic/claude-haiku-5.5",
+        "crop_judge": "anthropic/claude-haiku-5.5",
+        "mark_blind": "anthropic/claude-haiku-5.5",
+        "mark_forensic": "openai/gpt-6-luna",
+        "mark_judge": "anthropic/claude-haiku-5.5",
+    },
+    "high": {
+        "classifier": "anthropic/claude-haiku-5.5",
+        "printed": "anthropic/claude-haiku-5.5",
+        "handwritten": "anthropic/claude-sonnet-5.5",
+        "secondary": "openai/gpt-6-luna",
+        "recheck": "anthropic/claude-sonnet-5.5",
+        "crop": "anthropic/claude-haiku-5.5",
+        "crop_judge": "anthropic/claude-haiku-5.5",
+        "mark_blind": "anthropic/claude-sonnet-5.5",
+        "mark_forensic": "anthropic/claude-sonnet-5.5",
+        "mark_judge": "anthropic/claude-opus-5.5",
+    },
+    "max": {
+        "classifier": "anthropic/claude-opus-5.5",
+        "printed": "anthropic/claude-opus-5.5",
+        "handwritten": "anthropic/claude-opus-5.5",
+        "secondary": "openai/gpt-6-astra-pro",
+        "recheck": "anthropic/claude-opus-5.5",
+        "crop": "anthropic/claude-opus-5.5",
+        "crop_judge": "openai/gpt-6-astra-pro",
+        "mark_blind": "anthropic/claude-opus-5.5",
+        "mark_forensic": "openai/gpt-6-astra-pro",
+        "mark_judge": "openai/gpt-6-astra-pro",
+    },
 }
+ACTIVE_MODEL_PROFILE = "lite"
 DOCUMENT_MODES = {"mixed", "full-ocr"}
 
 FUZZY_AGREEMENT = 0.85
@@ -63,6 +114,43 @@ AUDIT_RATE = 0.05
 IGNORE_DIACRITICS = False
 UNCLEAR_RE = re.compile(r"[\[\(\{]\s*غير\s+واضح\s*[\]\)\}]")
 USAGE = {"prompt_tokens": 0, "completion_tokens": 0, "calls": 0}
+MODEL_USAGE: dict[str, dict] = {}
+FREE_MODEL_COOLDOWN_UNTIL: dict[str, float] = {}
+
+
+class OpenRouterResponseError(RuntimeError):
+    """Represent an error returned inside an otherwise successful HTTP response."""
+
+    def __init__(self, details) -> None:
+        self.details = details
+        self.status_code = details.get("code") if isinstance(details, dict) else None
+        message = details.get("message", str(details)) if isinstance(details, dict) else str(details)
+        super().__init__(message)
+
+
+def configure_model_profile(profile: str) -> None:
+    """Select all OCR/evaluation models for one strict cost-quality tier."""
+    if profile not in MODEL_PROFILES:
+        raise ValueError(f"Unknown model profile {profile!r}")
+    models = MODEL_PROFILES[profile]
+    global ACTIVE_MODEL_PROFILE
+    global MODEL_CLASSIFIER, MODEL_PRINTED, MODEL_HANDWRITTEN, MODEL_SECONDARY
+    global MODEL_RECHECK, MODEL_CROP, MODEL_CROP_JUDGE
+    global MODEL_MARK_BLIND, MODEL_MARK_FORENSIC, MODEL_MARK_JUDGE
+    ACTIVE_MODEL_PROFILE = profile
+    MODEL_CLASSIFIER = models["classifier"]
+    MODEL_PRINTED = models["printed"]
+    MODEL_HANDWRITTEN = models["handwritten"]
+    MODEL_SECONDARY = models["secondary"]
+    MODEL_RECHECK = models["recheck"]
+    MODEL_CROP = models["crop"]
+    MODEL_CROP_JUDGE = models["crop_judge"]
+    MODEL_MARK_BLIND = models["mark_blind"]
+    MODEL_MARK_FORENSIC = models["mark_forensic"]
+    MODEL_MARK_JUDGE = models["mark_judge"]
+
+
+configure_model_profile(ACTIVE_MODEL_PROFILE)
 
 
 def resolve_input_path(path: str | Path) -> Path:
@@ -76,11 +164,20 @@ def resolve_input_path(path: str | Path) -> Path:
     raise FileNotFoundError(candidate)
 
 
+def sanitize_artifact_name(name: str) -> str:
+    """Remove invisible, unsafe, and Windows-reserved filename characters."""
+    clean = re.sub(
+        r"[\x00-\x1f\x7f-\x9f\u200e\u200f\u202a-\u202e\ufeff]", "", name
+    ).strip()
+    clean = re.sub(r'[\\/*?:"<>| ]', "_", clean)
+    return clean or "document"
+
+
 def artifact_directories(path: str | Path) -> tuple[Path, Path]:
     """Return and create the managed log/output folders for one input."""
-    name = Path(path).stem
-    log_dir = LOG_DIR / name
-    output_dir = OUTPUT_DIR / name
+    name = sanitize_artifact_name(Path(path).stem)
+    log_dir = (LOG_DIR / name).resolve()
+    output_dir = (OUTPUT_DIR / name).resolve()
     log_dir.mkdir(parents=True, exist_ok=True)
     output_dir.mkdir(parents=True, exist_ok=True)
     return log_dir, output_dir
@@ -98,7 +195,7 @@ def find_cached_ocr_output(
 ) -> Path | None:
     """Return a reusable managed OCR result, or None when it may be stale."""
     input_path = resolve_input_path(path)
-    artifact_name = input_path.stem
+    artifact_name = sanitize_artifact_name(input_path.stem)
     log_dir = LOG_DIR / artifact_name
     output_path = OUTPUT_DIR / artifact_name / "final.txt"
     if not output_path.is_file() or output_path.stat().st_size == 0:
@@ -157,6 +254,65 @@ def to_data_url(img: Image.Image, fmt: str = "PNG") -> str:
     return f"data:image/{fmt.lower()};base64,{encoded}"
 
 
+def _free_model_candidates(model: str) -> list[str]:
+    """Prefer a deterministic free vision model, then fail over safely."""
+    if ACTIVE_MODEL_PROFILE != "free":
+        return [model]
+    ordered = list(dict.fromkeys((model, *FREE_VISION_FALLBACKS)))
+    now = time.monotonic()
+    available = [
+        candidate
+        for candidate in ordered
+        if FREE_MODEL_COOLDOWN_UNTIL.get(candidate, 0.0) <= now
+    ]
+    # The generic router remains a last-resort escape hatch even when every
+    # explicit endpoint is cooling down.
+    return available or ["openrouter/free"]
+
+
+def _cool_down_free_model(model: str, exc: Exception) -> int:
+    """Temporarily skip an unhealthy free endpoint for later pipeline calls."""
+    status = None
+    if isinstance(exc, requests.HTTPError) and exc.response is not None:
+        status = exc.response.status_code
+    elif isinstance(exc, OpenRouterResponseError):
+        try:
+            status = int(exc.status_code)
+        except (TypeError, ValueError):
+            status = None
+    if status == 429:
+        seconds = 15 * 60
+    elif status is not None and status >= 500:
+        seconds = 2 * 60
+    elif isinstance(exc, (requests.Timeout, requests.ConnectionError)):
+        seconds = 2 * 60
+    elif isinstance(exc, (ValueError, json.JSONDecodeError)):
+        seconds = 60
+    else:
+        seconds = 0
+    if seconds:
+        FREE_MODEL_COOLDOWN_UNTIL[model] = time.monotonic() + seconds
+    return seconds
+
+
+def _message_text(message: dict) -> str:
+    """Normalize OpenRouter string or content-block replies and reject blanks."""
+    content = message.get("content")
+    if isinstance(content, str):
+        result = content.strip()
+    elif isinstance(content, list):
+        result = "\n".join(
+            str(block.get("text", "")).strip()
+            for block in content
+            if isinstance(block, dict) and block.get("type") in {"text", "output_text"}
+        ).strip()
+    else:
+        result = ""
+    if not result:
+        raise ValueError("provider returned an empty/null message.content")
+    return result
+
+
 def chat(model: str, text: str, images: list[Image.Image], retries: int = 3) -> str:
     """Make one OpenRouter chat-completions call with retry accounting."""
     if not API_KEY:
@@ -166,26 +322,56 @@ def chat(model: str, text: str, images: list[Image.Image], retries: int = 3) -> 
         {"type": "image_url", "image_url": {"url": to_data_url(image)}}
         for image in images
     )
-    payload = {"model": model, "messages": [{"role": "user", "content": content}]}
     headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
     last_error = None
-    for attempt in range(retries):
+    candidates = _free_model_candidates(model)
+    attempts = candidates if ACTIVE_MODEL_PROFILE == "free" else [model] * retries
+    for attempt, candidate in enumerate(attempts):
+        payload = {
+            "model": candidate,
+            "messages": [{"role": "user", "content": content}],
+        }
+        if ACTIVE_MODEL_PROFILE == "free":
+            # Several free vision endpoints enable long reasoning by default.
+            # OCR needs the final transcription, not a large hidden reasoning pass.
+            payload.update({
+                "reasoning": {"enabled": False},
+                "temperature": 0,
+                "max_tokens": 8192,
+            })
         try:
-            response = requests.post(URL, headers=headers, json=payload, timeout=120)
+            timeout = (15, 45) if ACTIVE_MODEL_PROFILE == "free" else 120
+            response = requests.post(URL, headers=headers, json=payload, timeout=timeout)
             response.raise_for_status()
             data = response.json()
             if "error" in data:
-                raise RuntimeError(data["error"])
+                raise OpenRouterResponseError(data["error"])
             usage = data.get("usage") or {}
             USAGE["prompt_tokens"] += usage.get("prompt_tokens", 0)
             USAGE["completion_tokens"] += usage.get("completion_tokens", 0)
             USAGE["calls"] += 1
-            return data["choices"][0]["message"]["content"]
+            calculate_cost.record_usage(MODEL_USAGE, candidate, usage)
+            answer = _message_text(data["choices"][0]["message"])
+            # Every OCR/evaluation prompt in this module requires JSON. Validate
+            # here so free endpoints that emit truncated prose trigger failover.
+            parse_json(answer)
+            if candidate != model:
+                print(f"Free-model fallback: {model} -> {candidate}", file=sys.stderr)
+            return answer
         except Exception as exc:
-            last_error = exc
-            if attempt + 1 < retries:
+            last_error = RuntimeError(f"{candidate}: {exc}")
+            cooldown = _cool_down_free_model(candidate, exc)
+            if attempt + 1 < len(attempts):
+                cooldown_note = f"; cooldown {cooldown}s" if cooldown else ""
+                print(
+                    f"Free model {candidate} failed ({exc}){cooldown_note}; trying "
+                    f"{attempts[attempt + 1]}",
+                    file=sys.stderr,
+                )
                 time.sleep(2 ** attempt)
-    raise RuntimeError(f"{model} failed after {retries} tries: {last_error}")
+    raise RuntimeError(
+        f"{model} failed across {len(attempts)} attempt(s): {last_error}"
+    )
 
 
 def parse_json(text: str):
@@ -224,11 +410,6 @@ OCR_PROMPT = """Transcribe ALL Arabic text in this image exactly as written.
 - Use one JSON string per visual line, top to bottom, in natural reading order.
 - If a word truly cannot be read, write [غير واضح] only for that word.
 - Return ONLY a JSON array of strings, e.g. ["السطر الأول", "السطر الثاني"]"""
-
-ORIENTATION_PROMPT = """Determine the rotation needed to make this Arabic document upright.
-Return ONLY JSON: {"rotation":0,"confidence":0.0}
-rotation must be exactly one of 0, 90, 180, 270 degrees clockwise. Inspect Arabic
-baselines and reading direction; do not infer orientation merely from image aspect ratio."""
 
 CROP_CHOICE_PROMPT = """Compare two OCR readings of the same printed Arabic page.
 Candidate FULL was read from the entire enhanced page. Candidate CROPS was read
@@ -277,39 +458,9 @@ def ocr(model: str, img: Image.Image) -> list[str]:
     return lines
 
 
-def _rotate_pil_clockwise(image: Image.Image, degrees: int) -> Image.Image:
-    if degrees == 90:
-        return image.transpose(Image.Transpose.ROTATE_270)
-    if degrees == 180:
-        return image.transpose(Image.Transpose.ROTATE_180)
-    if degrees == 270:
-        return image.transpose(Image.Transpose.ROTATE_90)
-    return image
-
-
 def preprocess_for_ocr(img: Image.Image) -> preprocess.PreprocessResult:
-    """Run local document cleanup and optionally resolve ambiguous orientation."""
-    result = preprocess.preprocess_document(img)
-    if not USE_ORIENTATION_API or result.metadata["orientation_confidence"] >= 0.10:
-        return result
-    try:
-        decision = parse_json(chat(MODEL_ORIENTATION, ORIENTATION_PROMPT, [img]))
-        rotation = int(decision.get("rotation", 0))
-        confidence = float(decision.get("confidence", 0.0))
-        if rotation not in {0, 90, 180, 270} or confidence < 0.65:
-            return result
-        rotated = _rotate_pil_clockwise(img, rotation)
-        resolved = preprocess.preprocess_document(rotated, apply_orientation=False)
-        resolved.metadata["orientation_api"] = {
-            "used": True,
-            "rotation": rotation,
-            "confidence": max(0.0, min(1.0, confidence)),
-            "model": MODEL_ORIENTATION,
-        }
-        return resolved
-    except Exception as exc:
-        result.metadata["orientation_api"] = {"used": False, "error": str(exc)}
-        return result
+    """Run local document cleanup without any orientation correction."""
+    return preprocess.preprocess_document(img, apply_orientation=False)
 
 
 def _fallback_crop_choice(full: list[str], crops: list[str]) -> tuple[str, str]:
@@ -551,24 +702,30 @@ def process(
 ) -> Path:
     image_path = Path(path)
     raw_img = Image.open(image_path).convert("RGB")
-    artifact_name = artifact_name or image_path.stem
+    artifact_name = sanitize_artifact_name(artifact_name or image_path.stem)
+
     if log_dir is None:
         log_dir, default_output_dir = artifact_directories(image_path)
     else:
-        log_dir = Path(log_dir)
+        log_dir = Path(log_dir).resolve()
         log_dir.mkdir(parents=True, exist_ok=True)
-        default_output_dir = OUTPUT_DIR / artifact_name
+        default_output_dir = (OUTPUT_DIR / artifact_name).resolve()
+        default_output_dir.mkdir(parents=True, exist_ok=True)
+
     if output_path is None:
         default_output_dir.mkdir(parents=True, exist_ok=True)
         output_path = default_output_dir / "final.txt"
     else:
-        output_path = Path(output_path)
+        output_path = Path(output_path).resolve()
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
     prepared = preprocess_for_ocr(raw_img)
     img = prepared.image
-    preprocessed_path = log_dir / f"{artifact_name}_preprocessed.png"
-    img.save(preprocessed_path, format="PNG", optimize=True)
+
+    # Đảm bảo đường dẫn tuyệt đối, chuẩn chuỗi string tránh lỗi Errno 22
+    preprocessed_path = (log_dir / f"{artifact_name}_preprocessed.png").resolve()
+    img.save(str(preprocessed_path), format="PNG")
+
     paragraph_boxes, layout_quality = preprocess.detect_arabic_paragraphs(prepared)
 
     classification = classify_document(img)
@@ -577,8 +734,6 @@ def process(
         f"{path}: {classification['type']} "
         f"(confidence {classification['confidence']:.0%}); primary={primary_model}"
     )
-    # Printed pages compare a low-cost full-page pass with low-cost paragraph
-    # crops. Handwritten/mixed pages retain the stronger primary model.
     if classification["type"] == "printed":
         a, crop_route = printed_ocr_with_optional_crops(
             img, prepared, paragraph_boxes, layout_quality
@@ -590,8 +745,6 @@ def process(
             "selected": "full",
             "reason": f"crop OCR disabled for {classification['type']} page",
         }
-    # The independent secondary validates the chosen primary reading, but does
-    # not overrule it when the secondary abstains.
     b = ocr(MODEL_SECONDARY, img)
     (log_dir / f"{artifact_name}_modelA.txt").write_text("\n".join(a), encoding="utf-8")
     (log_dir / f"{artifact_name}_modelB.txt").write_text("\n".join(b), encoding="utf-8")
@@ -620,9 +773,6 @@ def process(
             continue
 
         if block["status"] == "single_source":
-            # A missing aligned line is another kind of blank vote. Preserve the
-            # available reading, but mark it so downstream users do not mistake
-            # it for agreement between both OCR systems.
             text = block["a"] or block["b"]
             flag = "single_source_a" if block["a"] else "single_source_b"
             final.append({"text": text, "flag": flag, **base})
@@ -644,6 +794,7 @@ def process(
     output = {
         "input": str(image_path),
         "source_signature": source_signature(image_path),
+        "model_profile": ACTIVE_MODEL_PROFILE,
         "document_type": classification["type"],
         "classification_confidence": classification["confidence"],
         "models": {"primary": primary_model, "secondary": MODEL_SECONDARY, "recheck": MODEL_RECHECK},
@@ -678,8 +829,10 @@ def evolve(
     sys.modules.setdefault("main", sys.modules[__name__])
     import mark
 
+    mark.configure_models(MODEL_MARK_BLIND, MODEL_MARK_FORENSIC, MODEL_MARK_JUDGE)
+
     image_path = Path(path)
-    artifact_name = artifact_name or image_path.stem
+    artifact_name = sanitize_artifact_name(artifact_name or image_path.stem)
     if log_dir is None:
         log_dir, _ = artifact_directories(image_path)
     else:
@@ -747,7 +900,7 @@ def process_document(
     if document_mode not in DOCUMENT_MODES:
         raise ValueError(f"document_mode must be one of {sorted(DOCUMENT_MODES)}")
     input_path = Path(path)
-    artifact_name = input_path.stem
+    artifact_name = sanitize_artifact_name(input_path.stem)
     document_log_dir, output_dir = artifact_directories(input_path)
     log_dir = document_log_dir / document_mode
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -835,6 +988,7 @@ def process_document(
         "input": str(input_path),
         "input_type": input_path.suffix.lower(),
         "source_signature": source_signature(input_path),
+        "model_profile": ACTIVE_MODEL_PROFILE,
         "document_mode": document_mode,
         "parts": part_reports,
         "typed_parts": sum(part.kind == "text" for part in parts),
@@ -882,10 +1036,14 @@ def translate_output(
     """Translate a completed OCR result into one managed output artifact."""
     import translate
 
+    translate.configure_model_profile(ACTIVE_MODEL_PROFILE)
+
     resolved_input = resolve_input_path(input_path)
     log_dir, output_dir = artifact_directories(resolved_input)
     target_name, target_code = translate.normalize_target(target_language)
-    translation_log = log_dir / "translation" / target_code / translation_mode
+    translation_log = (
+        log_dir / "translation" / target_code / translation_mode / ACTIVE_MODEL_PROFILE
+    )
     translation_output = output_dir / "translations" / f"{target_code}.txt"
     result = translate.translate_file(
         final_text_path,
@@ -896,11 +1054,6 @@ def translate_output(
     )
     print(
         f"{resolved_input}: translated to {target_name} ({translation_mode}) -> {result}"
-    )
-    print(
-        f"Translation API calls: {translate.USAGE['calls']}, "
-        f"prompt tokens: {translate.USAGE['prompt_tokens']}, "
-        f"completion tokens: {translate.USAGE['completion_tokens']}"
     )
     return result
 
@@ -913,7 +1066,7 @@ def preprocess_only(path: str) -> Path:
     with Image.open(input_path) as opened:
         result = preprocess_for_ocr(opened.convert("RGB"))
     boxes, quality = preprocess.detect_arabic_paragraphs(result)
-    artifact_name = input_path.stem
+    artifact_name = sanitize_artifact_name(input_path.stem)
     log_dir, _ = artifact_directories(input_path)
     output_path = log_dir / f"{artifact_name}_preprocessed.png"
     report_path = log_dir / f"{artifact_name}.preprocess.json"
@@ -923,6 +1076,7 @@ def preprocess_only(path: str) -> Path:
             {
                 "input": str(input_path),
                 "output": str(output_path),
+                "model_profile": ACTIVE_MODEL_PROFILE,
                 "preprocessing": result.metadata,
                 "paragraph_detection": {
                     "quality": quality.as_dict(),
@@ -947,7 +1101,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--no-evolve",
         action="store_true",
-        help="skip the two retry prompts and final Opus visual adjudication",
+        help="skip the two retry prompts and profile-selected visual adjudication",
     )
     parser.add_argument(
         "--preprocess-only",
@@ -974,7 +1128,7 @@ if __name__ == "__main__":
         choices=["verified", "fast"],
         default="verified",
         help=(
-            "verified: local direct/pivot + free multilingual + Haiku judge when supported; "
+            "verified: local direct/pivot + free multilingual + profile-selected judge; "
             "fast: local direct/pivot only for configured targets "
             "(zero OpenRouter API calls)"
         ),
@@ -984,7 +1138,19 @@ if __name__ == "__main__":
         action="store_true",
         help="ignore an existing output/<name>/final.txt and run OCR again before translation",
     )
+    profile_group = parser.add_mutually_exclusive_group()
+    for profile in ("free", "lite", "high", "max"):
+        profile_group.add_argument(
+            f"--{profile}",
+            dest="model_profile",
+            action="store_const",
+            const=profile,
+            help=f"use the {profile} model profile (default: lite)",
+        )
+    parser.set_defaults(model_profile="lite")
     args = parser.parse_args()
+    configure_model_profile(args.model_profile)
+    print(f"Model profile: {ACTIVE_MODEL_PROFILE}")
     if args.preprocess_only and args.translate:
         parser.error("--translate cannot be combined with --preprocess-only")
     for input_path in args.inputs:
@@ -1012,7 +1178,14 @@ if __name__ == "__main__":
                     target_language,
                     translation_mode=args.translation_mode,
                 )
-    print(
-        f"API calls: {USAGE['calls']}, prompt tokens: {USAGE['prompt_tokens']}, "
-        f"completion tokens: {USAGE['completion_tokens']}"
+    translation_module = sys.modules.get("translate")
+    translation_usage = (
+        getattr(translation_module, "MODEL_USAGE", {})
+        if translation_module is not None
+        else {}
     )
+    cost_report = calculate_cost.build_cost_report(
+        {"ocr": MODEL_USAGE, "translation": translation_usage},
+        command=sys.argv,
+    )
+    calculate_cost.print_cost_report(cost_report)

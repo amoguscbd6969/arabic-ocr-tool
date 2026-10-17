@@ -20,17 +20,38 @@ from pathlib import Path
 import requests
 from dotenv import load_dotenv
 
+import calculate_cost
+
 
 PROJECT_DIR = Path(__file__).resolve().parent
 load_dotenv(PROJECT_DIR / ".env")
 
 URL = "https://openrouter.ai/api/v1/chat/completions"
 API_KEY = os.getenv("OPENROUTER_API_KEY")
-MULTILINGUAL_MODEL = os.getenv(
-    "TRANSLATION_MULTILINGUAL_MODEL", "nvidia/nemotron-3-super-120b-a12b:free"
-)
-JUDGE_MODEL = os.getenv("TRANSLATION_JUDGE_MODEL", "anthropic/claude-haiku-5.5")
+FREE_MULTILINGUAL_MODEL = "nvidia/nemotron-3-super-120b-a12b:free"
+MULTILINGUAL_MODEL = FREE_MULTILINGUAL_MODEL
+TRANSLATION_JUDGES = {
+    "free": "openrouter/free",
+    "lite": "anthropic/claude-haiku-5.5",
+    "high": "anthropic/claude-haiku-5.5",
+    "max": "openai/gpt-6-astra-pro",
+}
+ACTIVE_MODEL_PROFILE = "lite"
+JUDGE_MODEL = TRANSLATION_JUDGES[ACTIVE_MODEL_PROFILE]
 USAGE = {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0}
+MODEL_USAGE: dict[str, dict] = {}
+
+
+def configure_model_profile(profile: str) -> None:
+    """Select the translation judge that belongs to an OCR model profile."""
+    if profile not in TRANSLATION_JUDGES:
+        raise ValueError(f"Unknown model profile {profile!r}")
+    global ACTIVE_MODEL_PROFILE, JUDGE_MODEL, MULTILINGUAL_MODEL
+    ACTIVE_MODEL_PROFILE = profile
+    JUDGE_MODEL = TRANSLATION_JUDGES[profile]
+    MULTILINGUAL_MODEL = (
+        "openrouter/free" if profile == "free" else FREE_MULTILINGUAL_MODEL
+    )
 
 TARGETS = {
     "en": ("English", "en"), "english": ("English", "en"),
@@ -149,6 +170,7 @@ def _chat(model: str, prompt: str, retries: int = 3) -> str:
             USAGE["calls"] += 1
             USAGE["prompt_tokens"] += int(usage.get("prompt_tokens", 0) or 0)
             USAGE["completion_tokens"] += int(usage.get("completion_tokens", 0) or 0)
+            calculate_cost.record_usage(MODEL_USAGE, model, usage)
             return data["choices"][0]["message"]["content"].strip()
         except Exception as exc:
             last_error = exc
@@ -424,6 +446,7 @@ def translate_with_report(
 
     final_text = "\n\n".join(final_chunks).strip()
     report = {
+        "model_profile": ACTIVE_MODEL_PROFILE,
         "source_language": "ar",
         "target_language": target_code,
         "target_name": target_name,
@@ -511,7 +534,18 @@ def main_cli() -> None:
     )
     parser.add_argument("--output", type=Path)
     parser.add_argument("--log-dir", type=Path)
+    profile_group = parser.add_mutually_exclusive_group()
+    for profile in ("free", "lite", "high", "max"):
+        profile_group.add_argument(
+            f"--{profile}",
+            dest="model_profile",
+            action="store_const",
+            const=profile,
+            help=f"use the {profile} model profile (default: lite)",
+        )
+    parser.set_defaults(model_profile="lite")
     args = parser.parse_args()
+    configure_model_profile(args.model_profile)
 
     source_path = Path(args.source)
     if source_path.is_file():
@@ -532,6 +566,12 @@ def main_cli() -> None:
     print(
         f"API calls: {USAGE['calls']}, prompt tokens: {USAGE['prompt_tokens']}, "
         f"completion tokens: {USAGE['completion_tokens']}"
+    )
+    calculate_cost.print_cost_report(
+        calculate_cost.build_cost_report(
+            {"translation": MODEL_USAGE},
+            command=sys.argv,
+        )
     )
 
 

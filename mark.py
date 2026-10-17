@@ -10,7 +10,6 @@ Example:
 
 import argparse
 import json
-import os
 import re
 import unicodedata
 from pathlib import Path
@@ -20,9 +19,17 @@ from PIL import Image
 import main
 
 
-MODEL_BLIND = os.getenv("MARK_MODEL_BLIND", "anthropic/claude-sonnet-5.5")
-MODEL_FORENSIC = os.getenv("MARK_MODEL_FORENSIC", "anthropic/claude-sonnet-5.5")
-MODEL_JUDGE = os.getenv("MARK_MODEL_JUDGE", "anthropic/claude-opus-5.5")
+MODEL_BLIND = main.MODEL_MARK_BLIND
+MODEL_FORENSIC = main.MODEL_MARK_FORENSIC
+MODEL_JUDGE = main.MODEL_MARK_JUDGE
+
+
+def configure_models(blind: str, forensic: str, judge: str) -> None:
+    """Use the same cost-quality profile as the calling OCR pipeline."""
+    global MODEL_BLIND, MODEL_FORENSIC, MODEL_JUDGE
+    MODEL_BLIND = blind
+    MODEL_FORENSIC = forensic
+    MODEL_JUDGE = judge
 
 
 BLIND_PROMPT = """Act as a conservative Arabic paleographer. Produce a fresh,
@@ -217,6 +224,7 @@ def run(image_path: Path, candidate_path: Path, reference_path: Path | None = No
             "forensic": MODEL_FORENSIC,
             "judge": MODEL_JUDGE,
         },
+        "model_profile": main.ACTIVE_MODEL_PROFILE,
         "current_score_10": judgement["current_score_10"],
         "current_estimated_wer": judgement["current_estimated_wer"],
         "final_score_10": judgement["final_score_10"],
@@ -258,10 +266,27 @@ def main_cli() -> None:
     parser.add_argument("--reference", type=Path, help="human ground truth for exact WER/CER")
     parser.add_argument("--output", type=Path, help="path for improved transcription")
     parser.add_argument("--report", type=Path, help="path for JSON evaluation report")
+    profile_group = parser.add_mutually_exclusive_group()
+    for profile in ("free", "lite", "high", "max"):
+        profile_group.add_argument(
+            f"--{profile}",
+            dest="model_profile",
+            action="store_const",
+            const=profile,
+            help=f"use the {profile} model profile (default: lite)",
+        )
+    parser.set_defaults(model_profile="lite")
     args = parser.parse_args()
 
+    main.configure_model_profile(args.model_profile)
+    configure_models(
+        main.MODEL_MARK_BLIND,
+        main.MODEL_MARK_FORENSIC,
+        main.MODEL_MARK_JUDGE,
+    )
+
     image = main.resolve_input_path(args.image)
-    artifact_name = image.stem
+    artifact_name = main.sanitize_artifact_name(image.stem)
     log_dir, output_dir = main.artifact_directories(image)
     candidate = args.candidate or output_dir / "final.txt"
     output = args.output or log_dir / f"{artifact_name}_retry.txt"
