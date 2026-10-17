@@ -1,0 +1,67 @@
+{
+  "image": "D:\\projects\\arabic-ocr\\log\\sample_1\\sample_1_preprocessed.png",
+  "candidate": "D:\\projects\\arabic-ocr\\output\\sample_1\\final.txt",
+  "models": {
+    "blind": "anthropic/claude-haiku-5.5",
+    "forensic": "openai/gpt-6-luna",
+    "judge": "anthropic/claude-haiku-5.5"
+  },
+  "model_profile": "lite",
+  "current_score_10": 4.0,
+  "current_estimated_wer": 0.45,
+  "final_score_10": 6.0,
+  "final_estimated_wer": 0.25,
+  "estimated_wer_warning": "Model estimate only; use --reference for exact WER.",
+  "rationale": "Candidate A has the correct structure and most clause wording, but it contains many unresolved placeholders and corrupted fragments. Candidate B misreads several names and clause amounts, and Candidate C is cleaner in the clauses but still has gaps. The final lines take the readable clause wording from A and C, keep the amounts and names that the image supports, and mark the damaged witness and boundary spans as unclear. The title amount, party names, and the 6,500 / 6,000 figures are the most reliable. The date and the clause 6 amount remain uncertain.",
+  "issues": [
+    "Title amount: the top reads ٦٥٠٠ ليرة اسرائيل; the sale price in the body reads ستة آلاف وخمسمئة, so the two figures should be checked against each other.",
+    "The surname in the first party line (الرمح vs الزعبر) is unclear in the image.",
+    "The year of the date (١٩٧٠ vs ١٩٧٢) is not certain; the final reading is ١٩٧٠م, which should be verified digit by digit.",
+    "Clause 6 amount: عشرة آلاف is the reading used, but ثلاثة آلاف is possible.",
+    "Clause 2 boundary descriptions (منطقة/منفعة سرب سعيد الشاعري, Shawakeh/Abu Bayd) and clause 3–4 phrasing are handwritten and only partly legible.",
+    "Witness signature lines and the bottom handwritten note are partially illegible; names beyond the clearly printed ones are uncertain."
+  ],
+  "candidate_disagreement": {
+    "current_vs_blind_wer": 0.932258064516129,
+    "current_vs_forensic_wer": 0.9195804195804196,
+    "blind_vs_forensic_wer": 0.5524475524475524
+  },
+  "line_counts": {
+    "current": 30,
+    "blind": 26,
+    "forensic": 29,
+    "final": 23
+  },
+  "final_lines": [
+    "٦٥٠٠ ليرة اسرائيل",
+    "عقد اتفاقية بيع نصف أرض",
+    "فقد تم بيع نصف دونم بمبلغ ستة آلاف وخمسمئة ليرة اسرائيل لارض",
+    "الفريق الاول: محمد محمود سليمان الرمح من الخليل محلة الشيخ",
+    "الفريق الثاني: صبحيه حسن سعيد الزبير وولدها حماده محمد محمود [غير واضح] من قبل محمد الشيخ",
+    "[غير واضح] الفريقان [غير واضح] على ما يلي:",
+    "١- يدفع الفريق الأول للفريق الثاني مبلغ ستة آلاف وخمسمئة ليرة اسرائيل لاعتبار ذلك وذلك ثمناً لتمام الدين الذي عليه الفريق الثاني وباقيه للفريق الأول من [غير واضح] سند [غير واضح]",
+    "٢- سلم الفريق الثاني للفريق الأول قطعة الأرض التي يملكها دون نزاع والتي باعها للفريق الأول وآلت ملكيتها إليه، ودفع [غير واضح] مساحتها حوالي نصف دونم، والواقعة في منطقة [غير واضح] والتي تحدها من الشمال والغرب ملك دباب محمود ومحمد أحمد أبو بيض الشواكة",
+    "٣- يعتبر هذا السند بصك الفريق الأول مالكاً شرعاً للأحكام [غير واضح] وبدون مماطلة",
+    "٤- على الفريق الثاني أن [غير واضح] للفريق الأول عن ملكية الأراضي لدى دوائر الطابو إذا طلب الفريق الأول ذلك",
+    "٥- يدفع الفريق الأول جميع المصاريف المتعلقة بتغيير ملكية الأرض من اسم الفريق الثاني إلى اسم الفريق الأول",
+    "٦- يدفع كل فريق من الفريقين مبلغ عشرة آلاف ليرة اسرائيل غرامة للفريق الآخر إذا أخل بما ورد في هذا العقد",
+    "٧- لهذه الأرض طريق عرضها متران من ملك محمد سعدي السديه ثم من ملك ضرار محمد أبو ارسبيه حتى تصل إلى شارع [غير واضح] وهو الذي يسمى (الجلاد)",
+    "جرى تحرير هذا العقد في اليوم الثاني عشر من شهر تموز ١٩٧٠م",
+    "أمام شهود عدول واشهد عليه شهود",
+    "شاهد [غير واضح]",
+    "شاهد",
+    "شاهد أبو حماد [غير واضح]",
+    "شاهد محمد سعيد [غير واضح]",
+    "شاهد [غير واضح] زهير [غير واضح]",
+    "توقيع أو بصمة صبحيه حسن سعيد الزبير",
+    "توقيع حماده محمد محمود",
+    "صبحيه [غير واضح] شاهد [غير واضح]"
+  ],
+  "original_image": "D:\\projects\\arabic-ocr\\input\\sample_1.jpg",
+  "evaluation_image": "D:\\projects\\arabic-ocr\\log\\sample_1\\sample_1_preprocessed.png",
+  "selection": {
+    "accepted_retry": true,
+    "authoritative_output": "D:\\projects\\arabic-ocr\\output\\sample_1\\final.txt",
+    "rule": "score must not decrease, estimated WER must not increase, and one must improve"
+  }
+}

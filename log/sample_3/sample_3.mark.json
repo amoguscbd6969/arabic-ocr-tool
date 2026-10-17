@@ -1,0 +1,56 @@
+{
+  "image": "D:\\projects\\arabic-ocr\\log\\sample_3\\sample_3_preprocessed.png",
+  "candidate": "D:\\projects\\arabic-ocr\\output\\sample_3\\final.txt",
+  "models": {
+    "blind": "anthropic/claude-haiku-5.5",
+    "forensic": "openai/gpt-6-luna",
+    "judge": "anthropic/claude-haiku-5.5"
+  },
+  "model_profile": "lite",
+  "current_score_10": 7.5,
+  "current_estimated_wer": 0.05,
+  "final_score_10": 8.5,
+  "final_estimated_wer": 0.03,
+  "estimated_wer_warning": "Model estimate only; use --reference for exact WER.",
+  "rationale": "Candidate A matches the visible text closely. The reference number is 549 in the image, which rejects Candidate C's 541. The date reads 24 May 1972 (٢٤ مايو ١٩٧٢). The closing line ٥٥٥ is visible and is kept. Candidate B's trailing [غير واضح] is an invented line, since the signature and name are readable. The top mark is two slanted strokes, so it is rendered as '//' rather than '١١'. The bottom handwritten annotation (number fraction and date fragments) is not transcribed because it is too ambiguous to read reliably.",
+  "issues": [
+    "The top mark may be '//' (two slashes) or '١١'; the image shows two diagonal strokes with no clear numerals.",
+    "Hamza presence in 'الاعلام' and 'اشراف' cannot be fully confirmed from the handwriting; the plain-alif form is kept as written.",
+    "The handwritten annotations at the bottom (a fraction-like reference and partial date marks near the stamp area) are not transcribed and may be a separate filing note.",
+    "Punctuation marks (، vs .) in lines such as 'تحية طيبة وبعد' are inferred from the visible dot and comma shapes."
+  ],
+  "candidate_disagreement": {
+    "current_vs_blind_wer": 0.1348314606741573,
+    "current_vs_forensic_wer": 0.1724137931034483,
+    "blind_vs_forensic_wer": 0.22988505747126436
+  },
+  "line_counts": {
+    "current": 14,
+    "blind": 14,
+    "forensic": 14,
+    "final": 14
+  },
+  "final_lines": [
+    "//",
+    "السيد الدكتور محمد عبدالقادر حاتم",
+    "نائب رئيس مجلس الوزراء ووزير الثقافة والاعلام",
+    "تحية طيبة وبعد ،",
+    "أتشرف بأن أرسل الى سيادتكم مع هذا النسخة المعتمدة للنشر",
+    "من قرار رئيس جمهورية مصر العربية رقم ٥٤٩ لسنة ١٩٧٢ باعتبار",
+    "اقامة متحف أمير الشعراء أحمد شوقى بكامل أرض وبناء العقار رقم",
+    "٦ شارع أحمد شوقى بمحافظة الجيزة من أعمال المنفعة العامة ،",
+    "رجاء التفضل بالتنبيه بندب من يلزم للاشراف على النشر",
+    "بالجريدة الرسمية بعد مراجعة المرفقات ،",
+    "وتفضلوا بقبول فائق الاحترام ٥٥٥",
+    "أمين عام مجلس الوزراء",
+    "( محمد يسرى قنصوه )",
+    "في ٢٤ مايو ١٩٧٢"
+  ],
+  "original_image": "D:\\projects\\arabic-ocr\\input\\sample_3.jpg",
+  "evaluation_image": "D:\\projects\\arabic-ocr\\log\\sample_3\\sample_3_preprocessed.png",
+  "selection": {
+    "accepted_retry": true,
+    "authoritative_output": "D:\\projects\\arabic-ocr\\output\\sample_3\\final.txt",
+    "rule": "score must not decrease, estimated WER must not increase, and one must improve"
+  }
+}

@@ -5,15 +5,31 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+*.rar
 
-# Keep exactly one end-to-end example; ignore all other local documents/runs.
+# Keep exactly four end-to-end examples; ignore all other local documents/runs.
 input/*
-!input/sample.jpg
+!input/sample_1.jpg
+!input/sample_2.jpg
+!input/sample_3.jpg
+!input/sample_4.jpg
 
 log/*
-!log/sample/
-!log/sample/**
+!log/sample_1/
+!log/sample_1/**
+!log/sample_2/
+!log/sample_2/**
+!log/sample_3/
+!log/sample_3/**
+!log/sample_4/
+!log/sample_4/**
 
 output/*
-!output/sample/
-!output/sample/**
+!output/sample_1/
+!output/sample_1/**
+!output/sample_2/
+!output/sample_2/**
+!output/sample_3/
+!output/sample_3/**
+!output/sample_4/
+!output/sample_4/**

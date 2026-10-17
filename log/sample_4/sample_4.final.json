@@ -1,0 +1,161 @@
+{
+  "input": "D:\\projects\\arabic-ocr\\input\\sample_4.jpg",
+  "source_signature": {
+    "size": 139450,
+    "mtime_ns": 1792206483753418200
+  },
+  "model_profile": "lite",
+  "document_type": "printed",
+  "classification_confidence": 0.85,
+  "models": {
+    "primary": "anthropic/claude-haiku-5.5",
+    "secondary": "openai/gpt-6-luna",
+    "recheck": "anthropic/claude-haiku-5.5"
+  },
+  "preprocessing": {
+    "original_width": 1032,
+    "original_height": 1600,
+    "output_width": 2000,
+    "output_height": 3183,
+    "upscale": 2.0161,
+    "perspective_applied": true,
+    "orientation_suggested": 180,
+    "orientation_applied": 0,
+    "orientation_confidence": 0.1224,
+    "orientation_scores": {
+      "0": 5.771,
+      "90": -0.4198,
+      "180": 5.9546,
+      "270": 0.6123
+    },
+    "deskew_angle": 0.0,
+    "blur_variance": 63.21,
+    "contrast_std": 33.22,
+    "low_resolution_input": true
+  },
+  "preprocessed_image": "D:\\projects\\arabic-ocr\\log\\sample_4\\sample_4_preprocessed.png",
+  "paragraph_detection": {
+    "quality": {
+      "passed": false,
+      "reason": "regions cover almost the full page (100.0%)",
+      "boxes": 1,
+      "ink_capture": 1.0,
+      "box_coverage": 1.0
+    },
+    "boxes": [
+      {
+        "x0": 0,
+        "y0": 0,
+        "x1": 2000,
+        "y1": 3183,
+        "ink_fraction": 0.0734
+      }
+    ]
+  },
+  "crop_route": {
+    "attempted": false,
+    "selected": "full",
+    "full_lines": 17,
+    "crop_lines": 0,
+    "judge": null,
+    "reason": "crop skipped: regions cover almost the full page (100.0%)"
+  },
+  "detected_line_bands": 16,
+  "lines": [
+    {
+      "text": "[[UNRESOLVED | A: ( ٢ ) | B: (٢)]]",
+      "flag": "unresolved",
+      "similarity": 0.75
+    },
+    {
+      "text": "(٨) لما كان القانون يقضي بتسجيل هذا البيع والشراء لدى المراجع المختصة",
+      "flag": "agreed",
+      "similarity": 0.8841
+    },
+    {
+      "text": "والرسمية واتخاذ اجراءات مهنة ومحددة فان الفريق الاول يتعهد ويلتزم بالفراغ",
+      "flag": "agreed",
+      "similarity": 0.9054
+    },
+    {
+      "text": "والتنازل عن المبيع الموصوف فيما تقدم لامر الفريق الثاني لدى جميع الدوائر",
+      "flag": "agreed",
+      "similarity": 0.9306
+    },
+    {
+      "text": "الرسمية والمختصة بما في ذلك دوائر الاراضي والتسجيل والطالية والبلدية بالتوقيع",
+      "flag": "agreed",
+      "similarity": 0.9221
+    },
+    {
+      "text": "على جميع الاوراق والمحاضر والمستندات والوثائق وبالقيام كذلك بكل عمل ومحافظة",
+      "flag": "single_source_a",
+      "similarity": 0.7484
+    },
+    {
+      "text": "واجراء حتى يكتسب هذا البيع وهذا العقد جميع الصور القانونية والصحيحة وحتى",
+      "flag": "agreed",
+      "similarity": 0.9861
+    },
+    {
+      "text": "يتم تنفيذ مضمون هذا العقد تنفيذا كاملا وحتى يتم تسجيل الجميع المذكور باسم",
+      "flag": "single_source_a",
+      "similarity": 0.8718
+    },
+    {
+      "text": "الفريق الثاني رسميا وقانونيا وذلك في اي وقت يحينسه الفريق الثاني .",
+      "flag": "single_source_a",
+      "similarity": 0.8759
+    },
+    {
+      "text": "(٩) رسوم الفراغ والتسجيل والانتقال عائدة على الفريق الثاني .",
+      "flag": "agreed",
+      "similarity": 0.9244
+    },
+    {
+      "text": "(١٠) الفريق الاول مسوؤل تجاه الفريق الثاني بالنسبة لعموم ما ورد في",
+      "flag": "corrected",
+      "similarity": 0.8485
+    },
+    {
+      "text": "هذا العقد مسؤولية كاملة مطلقة تامة شاملة ومتزم عن ازالة اية محارضات",
+      "flag": "agreed",
+      "similarity": 0.8592
+    },
+    {
+      "text": "او فارغات او حقوق للغير على مسوؤليته الخاصة ونفقته الشخصية كما وانه مسؤول",
+      "flag": "agreed",
+      "similarity": 0.863
+    },
+    {
+      "text": "عن كل عطل وضرر وتهديض وخسارة قد يتعرض لها الفريق الثاني نتيجة هذا التعاقد .",
+      "flag": "agreed",
+      "similarity": 0.9664
+    },
+    {
+      "text": "[[UNRESOLVED | A: على هذا تم الاتفاق وحرر هذا العقد وتلي على الفريقين وتعحا | B: وعليه فقد تم الاتفاق وحرر هذا العقد ووقع على الفريقين ويتسلم]]",
+      "flag": "unresolved",
+      "similarity": 0.8034
+    },
+    {
+      "text": "[[UNRESOLVED | A: عليه بعد ان فهما مضمونه ومحتهاته في هذا اليوم ١٩٧٢/٧/١٢ . | B: بعد أن تلياه وفهما مضمونه ومحتوياته في هذا اليوم ١٩٧٢/٧/١٢.]]",
+      "flag": "unresolved",
+      "similarity": 0.8448
+    },
+    {
+      "text": "[[UNRESOLVED | A: توقيع الشهود فريق ثاني فريق اول | B: تواقيع الشهود]]",
+      "flag": "unresolved",
+      "similarity": 0.5455
+    },
+    {
+      "text": "فريق ثاني",
+      "flag": "single_source_b",
+      "similarity": 0.0
+    },
+    {
+      "text": "فريق أول",
+      "flag": "single_source_b",
+      "similarity": 0.0
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "input": "D:\\projects\\arabic-ocr\\input\\sample_1.jpg",
+  "output": "D:\\projects\\arabic-ocr\\log\\sample_1\\sample_1_preprocessed.png",
+  "model_profile": "lite",
+  "preprocessing": {
+    "original_width": 1034,
+    "original_height": 1600,
+    "output_width": 2000,
+    "output_height": 3135,
+    "upscale": 1.9841,
+    "perspective_applied": true,
+    "orientation_suggested": 0,
+    "orientation_applied": 0,
+    "orientation_confidence": 0.0505,
+    "orientation_scores": {
+      "0": 6.5685,
+      "90": -10.0,
+      "180": 6.4927,
+      "270": -10.0
+    },
+    "deskew_angle": 0.0,
+    "blur_variance": 116.83,
+    "contrast_std": 33.28,
+    "low_resolution_input": true
+  },
+  "paragraph_detection": {
+    "quality": {
+      "passed": false,
+      "reason": "regions cover almost the full page (100.0%)",
+      "boxes": 1,
+      "ink_capture": 1.0,
+      "box_coverage": 1.0
+    },
+    "boxes": [
+      {
+        "x0": 0,
+        "y0": 0,
+        "x1": 2000,
+        "y1": 3135,
+        "ink_fraction": 0.0979
+      }
+    ]
+  }
+}

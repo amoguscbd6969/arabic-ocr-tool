@@ -1,0 +1,133 @@
+{
+  "input": "D:\\projects\\arabic-ocr\\input\\sample_3.jpg",
+  "source_signature": {
+    "size": 65013,
+    "mtime_ns": 1792206476396439400
+  },
+  "model_profile": "lite",
+  "document_type": "mixed",
+  "classification_confidence": 0.65,
+  "models": {
+    "primary": "anthropic/claude-haiku-5.5",
+    "secondary": "openai/gpt-6-luna",
+    "recheck": "anthropic/claude-haiku-5.5"
+  },
+  "preprocessing": {
+    "original_width": 550,
+    "original_height": 708,
+    "output_width": 2000,
+    "output_height": 2575,
+    "upscale": 3.6364,
+    "perspective_applied": false,
+    "orientation_suggested": 0,
+    "orientation_applied": 0,
+    "orientation_confidence": 0.0444,
+    "orientation_scores": {
+      "0": 3.2847,
+      "90": 2.6794,
+      "180": 3.2181,
+      "270": 2.7027
+    },
+    "deskew_angle": -1.0134,
+    "blur_variance": 98.82,
+    "contrast_std": 36.51,
+    "low_resolution_input": true
+  },
+  "preprocessed_image": "D:\\projects\\arabic-ocr\\log\\sample_3\\sample_3_preprocessed.png",
+  "paragraph_detection": {
+    "quality": {
+      "passed": false,
+      "reason": "single crop is equivalent to full-page OCR",
+      "boxes": 1,
+      "ink_capture": 1.0,
+      "box_coverage": 0.9105
+    },
+    "boxes": [
+      {
+        "x0": 89,
+        "y0": 0,
+        "x1": 1910,
+        "y1": 2575,
+        "ink_fraction": 0.141
+      }
+    ]
+  },
+  "crop_route": {
+    "attempted": false,
+    "selected": "full",
+    "reason": "crop OCR disabled for mixed page"
+  },
+  "detected_line_bands": 19,
+  "lines": [
+    {
+      "text": "١١",
+      "flag": "single_source_b",
+      "similarity": 0.0
+    },
+    {
+      "text": "السيد الدكتور محمد عبدالقادر حاتم",
+      "flag": "agreed",
+      "similarity": 0.9851
+    },
+    {
+      "text": "نائب رئيس مجلس الوزراء ووزير الثقافة والاعلام",
+      "flag": "agreed",
+      "similarity": 0.9778
+    },
+    {
+      "text": "تحية طيبة وبعد ،",
+      "flag": "agreed",
+      "similarity": 0.9677
+    },
+    {
+      "text": "أتشرف بأن أرسل الى سيادتكم مع هذا النسخة المعتمدة للنشر",
+      "flag": "agreed",
+      "similarity": 0.9444
+    },
+    {
+      "text": "من قرار رئيس جمهورية مصر العربية رقم ٥٤٩ لسنة ١٩٧٢ باعتبار",
+      "flag": "agreed",
+      "similarity": 0.9828
+    },
+    {
+      "text": "اقامة متحف أمير الشعراء أحمد شوقى بكامل أرض وبناء العقار رقم",
+      "flag": "agreed",
+      "similarity": 0.8739
+    },
+    {
+      "text": "٦ شارع أحمد شوقى بمحافظة الجيزة من أعمال المنفعة العامة ،",
+      "flag": "agreed",
+      "similarity": 0.9381
+    },
+    {
+      "text": "رجاء التفضل بالتنبيه بندب من يلزم للاشراف على النشر",
+      "flag": "agreed",
+      "similarity": 0.9804
+    },
+    {
+      "text": "بالجريدة الرسمية بعد مراجعة المرفقات ،",
+      "flag": "agreed",
+      "similarity": 0.96
+    },
+    {
+      "text": "وتفضلوا بقبول فائق الاحترام ٥٥٥",
+      "flag": "agreed",
+      "similarity": 0.931
+    },
+    {
+      "text": "أمين عام مجلس الوزراء",
+      "flag": "agreed",
+      "similarity": 1.0
+    },
+    {
+      "text": "( محمد يسرى قنصوه )",
+      "flag": "single_source_a",
+      "similarity": 0.5854
+    },
+    {
+      "text": "في ٢٤ مايو ١٩٧٢",
+      "flag": "agreed",
+      "similarity": 1.0
+    }
+  ]
+}

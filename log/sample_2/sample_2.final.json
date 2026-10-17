@@ -1,0 +1,198 @@
+{
+  "input": "D:\\projects\\arabic-ocr\\input\\sample_2.jpg",
+  "source_signature": {
+    "size": 226722,
+    "mtime_ns": 1792206463588816600
+  },
+  "model_profile": "lite",
+  "document_type": "mixed",
+  "classification_confidence": 0.6,
+  "models": {
+    "primary": "anthropic/claude-haiku-5.5",
+    "secondary": "openai/gpt-6-luna",
+    "recheck": "anthropic/claude-haiku-5.5"
+  },
+  "preprocessing": {
+    "original_width": 1031,
+    "original_height": 1600,
+    "output_width": 2000,
+    "output_height": 3149,
+    "upscale": 1.998,
+    "perspective_applied": true,
+    "orientation_suggested": 180,
+    "orientation_applied": 0,
+    "orientation_confidence": 1.0,
+    "orientation_scores": {
+      "0": 2.7532,
+      "90": 2.8927,
+      "180": 4.5873,
+      "270": 1.5317
+    },
+    "deskew_angle": 0.0,
+    "blur_variance": 158.08,
+    "contrast_std": 45.92,
+    "low_resolution_input": true
+  },
+  "preprocessed_image": "D:\\projects\\arabic-ocr\\log\\sample_2\\sample_2_preprocessed.png",
+  "paragraph_detection": {
+    "quality": {
+      "passed": false,
+      "reason": "regions cover almost the full page (100.0%)",
+      "boxes": 1,
+      "ink_capture": 1.0,
+      "box_coverage": 1.0
+    },
+    "boxes": [
+      {
+        "x0": 0,
+        "y0": 0,
+        "x1": 2000,
+        "y1": 3149,
+        "ink_fraction": 0.1515
+      }
+    ]
+  },
+  "crop_route": {
+    "attempted": false,
+    "selected": "full",
+    "reason": "crop OCR disabled for mixed page"
+  },
+  "detected_line_bands": 35,
+  "lines": [
+    {
+      "text": "(وكالة دورية )",
+      "flag": "agreed",
+      "similarity": 0.9655
+    },
+    {
+      "text": "بتاريخه وتنفيذا لعقد البيع المرغ في ١٩٧٢/٧/١٢ فاننا نحن المرقمين أدناه صبيحة",
+      "flag": "single_source_a",
+      "similarity": 0.7848
+    },
+    {
+      "text": "حسني الزغير وحمادة محمد محفوظ من الخليل ونحن بكامل الصفات المعتبرة شرعا وقانونا قد وكلنا ها",
+      "flag": "single_source_a",
+      "similarity": 0.8495
+    },
+    {
+      "text": "واقمنا مقام انفسنا وحوضا من اشخاصنا السيد مازن محمد محمود الزغير من الخليل في بيع وشراغ كامل",
+      "flag": "single_source_a",
+      "similarity": 0.6931
+    },
+    {
+      "text": "قطعة الارض خاصتنا البالغة مساحتها حوالي نصف دونم من اراضي الخليل موقع بير بلك النصاري _",
+      "flag": "single_source_a",
+      "similarity": 0.7089
+    },
+    {
+      "text": "وحدودها شمالا _ طك ديباب وورثة حماد عمرو جنوبا _ محمد سعدي السلايبة شرقا _ دياب عمرو",
+      "flag": "single_source_a",
+      "similarity": 0.4156
+    },
+    {
+      "text": "ومحمد احمد ابو بيض القواسمي غربا _ دياب وورثة حماد عمرو مع طريق عرضها مترين تمر من طك",
+      "flag": "single_source_a",
+      "similarity": 0.288
+    },
+    {
+      "text": "محمد سعدي السلايبة ثم من طك زهري محمد ابو رجلة حتى تصل للشارع العام والتي تسمى _ الجلاء _",
+      "flag": "single_source_a",
+      "similarity": 0.5435
+    },
+    {
+      "text": "بيعها باثنا وفرائها قطعها الى المشتري أنسيد محمد محمود الزغير من الخنيل لقاء ثمن وقدره سنة الآف",
+      "flag": "single_source_a",
+      "similarity": 0.4172
+    },
+    {
+      "text": "وخمسمائة ليرة اسرائيلية وصلنا بكامله من المشتري المذكور هذا ونقدا على وجه السلف وقد وقتنا وفوضنا",
+      "flag": "single_source_a",
+      "similarity": 0.5281
+    },
+    {
+      "text": "واذنا الوكيل الذكور بالاقرار والتقرير هنا وفي الاعتراف بصول الثمن وفي الترفيع في طي لمة ايراق",
+      "flag": "single_source_a",
+      "similarity": 0.5286
+    },
+    {
+      "text": "ومحاملات ومستندات ووثائق وفي تعهلني والظهور منا امام جميع الوزارات والدوائر الرسمية والمختصة بط _",
+      "flag": "single_source_a",
+      "similarity": 0.6704
+    },
+    {
+      "text": "في ذلك دوائر الاراضي والتسوية والمالوقوالبلدية وايه جهة اخرى وكذلك للظهور منا اذا اقتضى الامر",
+      "flag": "single_source_a",
+      "similarity": 0.5674
+    },
+    {
+      "text": "امام جميع المحاكم شرعية ونظامية صلحا ومركزية ومدنية واستئنافا واستئناف طيها وتعميزا وعدل طيها وايه",
+      "flag": "single_source_a",
+      "similarity": 0.5143
+    },
+    {
+      "text": "محكمة اخرى وذلك في جميع انواع القضايا بط في ذلك قضايا القسة والاقراز وازالة الشيوع والشفعة",
+      "flag": "single_source_a",
+      "similarity": 0.6788
+    },
+    {
+      "text": "والاطهة والمهاماة وايه قضية اونزاع اخر وفي التبلغ والتبليغ والدفاعة والمرافعة لاخر درجة من درجات",
+      "flag": "single_source_a",
+      "similarity": 0.4375
+    },
+    {
+      "text": "المحاكمة وفي تقديم البينة وحصرها والحجز فيها وفي تحليف اليمين وفي المصالحة وترتيبها وفي التحكيم",
+      "flag": "single_source_a",
+      "similarity": 0.75
+    },
+    {
+      "text": "وقبول او رفض قرار المحكمين وفي تنفيذ اي حكم يصدر لصالحنا لدى دائرة الاجراء او اية دائرة تقوم",
+      "flag": "agreed",
+      "similarity": 0.9271
+    },
+    {
+      "text": "قامها وفي جميع المعاملات الاجرائية والتنفيذية وفي طلب الحجزين التحفظي والاجرائي وفكها او تثبيتها",
+      "flag": "single_source_a",
+      "similarity": 0.0
+    },
+    {
+      "text": "[[UNRESOLVED | A: وفي طلب الحبس واسترداده وفي القيام باي عمل او محافظة او اجراء لدى اية جهة كانت والحاصل فاننا | B: وفي جميع المعاملات الاجرائية والتنفيذية وفي طلب الحبس والاسترداد وفي القيام بأي عمل او معاملة لدى اية جهة كانت والحاصل فاننا]]",
+      "flag": "unresolved",
+      "similarity": 0.7222
+    },
+    {
+      "text": "قد وكلنا الوكيل المذكور في كل ما يجوز به التوكيل شرعا وقانونا ذكر في هذه الوكالةقام لم يذكر وكالة",
+      "flag": "single_source_a",
+      "similarity": 0.8832
+    },
+    {
+      "text": "دورية خاصة ومحصرة بالبيع الموصوف فيها تقدم يتعلق فيها حق النبر وهو حق المشتري المذكور ليس",
+      "flag": "single_source_a",
+      "similarity": 0.6154
+    },
+    {
+      "text": "لنا او لخبرنا حق عزل الوكيل وكلما عزل يبقى وكيلا الى ان يتم تنفيذ ضمن هذه الوكالة تنفيذا كاملا",
+      "flag": "single_source_a",
+      "similarity": 0.0
+    },
+    {
+      "text": "والى ان يتم تسجيل المبيع المذكور باسم المشتري المذكور رسميا وقانونيا وان للوكيل المذكور الحق في",
+      "flag": "single_source_a",
+      "similarity": 0.9119
+    },
+    {
+      "text": "توكيل الغير في كل او بعض ما ذكر طالبين عن حضرة الكاتب العدل المحترم بالقدس التصديق",
+      "flag": "single_source_a",
+      "similarity": 0.8862
+    },
+    {
+      "text": "[[UNRESOLVED | A: طي هذه الوكالة حسب الاصول _ تحريرا في هذا اليوم ١٩٧٩/٥/١٦ . | B: في هذه الوكالة حسب الاصول -- تحريرا في هذا اليوم 16/5/1973]]",
+      "flag": "unresolved",
+      "similarity": 0.8205
+    },
+    {
+      "text": "توقيع الوكالة        توقيع الوكالة",
+      "flag": "single_source_a",
+      "similarity": 0.0
+    }
+  ]
+}

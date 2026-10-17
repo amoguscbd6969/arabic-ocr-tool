@@ -1,0 +1,60 @@
+{
+  "image": "D:\\projects\\arabic-ocr\\log\\sample_4\\sample_4_preprocessed.png",
+  "candidate": "D:\\projects\\arabic-ocr\\output\\sample_4\\final.txt",
+  "models": {
+    "blind": "anthropic/claude-haiku-5.5",
+    "forensic": "openai/gpt-6-luna",
+    "judge": "anthropic/claude-haiku-5.5"
+  },
+  "model_profile": "lite",
+  "current_score_10": 4.5,
+  "current_estimated_wer": 0.22,
+  "final_score_10": 7.5,
+  "final_estimated_wer": 0.07,
+  "estimated_wer_warning": "Model estimate only; use --reference for exact WER.",
+  "rationale": "Candidate A leaves the first, fourteenth, and fifteenth lines unresolved and contains several visible character-level errors: 'تهديض' for 'تهديد', 'محارضات' for 'معارضات', 'محتهاته' for 'محتوياته', 'يحينسه' for 'يطلبه', and 'تلياه' in the date line. Candidate B is closer on the body but drops the 'فريق' label structure and uses placeholders. Candidate C is the most faithful to the visible body text, with correct legal vocabulary (الطابو, معاملة, الأراضي). The final lines follow the visible text: the page number (٢), the clauses (٨)-(١٠), the closing formula, the date ١٩٧٢/٧/١٢, and the signature labels merged onto one line as they appear in the image.",
+  "issues": [
+    "The word after 'والتسجيل' in clause 5 is read as 'الطابو'; the handwriting is cramped and 'العالية' or 'الطالية' cannot be fully excluded.",
+    "The word in clause 10 before 'عن ازالة' is read as 'وملزم'; the ending is partly obscured by the text-block background.",
+    "The noun in clause 10 after 'او' is read as 'فارغات'; the handwriting is unclear and alternatives such as 'مخارجات' remain possible.",
+    "The final verb of the closing formula is read as 'ووقعا'; the stroke shapes are ambiguous and 'وتوقعا' is an alternative.",
+    "The separate handwritten signatures, stamp, and marginal notes below the signature line are not transcribed."
+  ],
+  "candidate_disagreement": {
+    "current_vs_blind_wer": 0.29411764705882354,
+    "current_vs_forensic_wer": 0.3858695652173913,
+    "blind_vs_forensic_wer": 0.16847826086956522
+  },
+  "line_counts": {
+    "current": 19,
+    "blind": 19,
+    "forensic": 17,
+    "final": 17
+  },
+  "final_lines": [
+    "(٢)",
+    "(٨) لما كان القانون يقضي بتسجيل هذا البيع والشراء لدى المراجع المختصة",
+    "والرسمية واتخاذ إجراءات مهنة ومحددة فإن الفريق الأول يتعهد ويلتزم بالفراغ",
+    "والتنازل عن المبيع الموصوف فيما تقدم لأمر الفريق الثاني لدى جميع الدوائر",
+    "الرسمية والمختصة بما في ذلك دوائر الأراضي والتسجيل والطابو والبلدية وبالتوقيع",
+    "على جميع الأوراق والمحاضر والمستندات والوثائق وبالقيام كذلك بكل عمل ومحافظة",
+    "وإجراء حتى يكتسب هذا البيع وهذا العقد جميع الصور القانونية والصحيحة وحتى",
+    "يتم تنفيذ مضمون هذا العقد تنفيذا كاملا وحتى يتم تسجيل المبيع المذكور باسم",
+    "الفريق الثاني رسميا وقانونيا وذلك في أي وقت يطلبه الفريق الثاني .",
+    "(٩) رسوم الفراغ والتسجيل والانتقال عائدة على الفريق الثاني .",
+    "(١٠) الفريق الأول مسؤول تجاه الفريق الثاني بالنسبة لعموم ما ورد في",
+    "هذا العقد مسؤولية كاملة مطلقة تامة شاملة وملزم عن إزالة أية معارضات",
+    "أو فارغات أو حقوق للغير على مسؤوليته الخاصة ونفقته الشخصية كما وأنه مسؤول",
+    "عن كل عطل وضرر وتهديد وخسارة قد يتعرض لها الفريق الثاني نتيجة هذا التعاقد .",
+    "على هذا تم الاتفاق وحرر هذا العقد وتلي على الفريقين ووقعا",
+    "عليه بعد أن فهما مضمونه ومحتوياته في هذا اليوم ١٩٧٢/٧/١٢ .",
+    "تواقيع الشهود          فريق ثاني          فريق أول"
+  ],
+  "original_image": "D:\\projects\\arabic-ocr\\input\\sample_4.jpg",
+  "evaluation_image": "D:\\projects\\arabic-ocr\\log\\sample_4\\sample_4_preprocessed.png",
+  "selection": {
+    "accepted_retry": true,
+    "authoritative_output": "D:\\projects\\arabic-ocr\\output\\sample_4\\final.txt",
+    "rule": "score must not decrease, estimated WER must not increase, and one must improve"
+  }
+}
