@@ -1,0 +1,18 @@
+.env*
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Keep exactly one end-to-end example; ignore all other local documents/runs.
+input/*
+!input/sample.jpg
+
+log/*
+!log/sample/
+!log/sample/**
+
+output/*
+!output/sample/
+!output/sample/**

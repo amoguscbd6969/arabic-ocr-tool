@@ -1,0 +1,7 @@
+1. Create an OCR pipeline with 2 candidate models and a evaluation model with other advanced techniques to achieve a good result (DONE)
+2. Create a way that user could upload diverse file of documents types rather than images (.pdf, .docx, .doc, .pttx, .ptt, .xlsx, .xls, .csv maybe, etc) (DONE)
+3. Translate the text to English or Vietnamese or other (final version after OCR) (DONE)
+4. Develop UI/UX that user could use it via web not terminal
+5. Try to making LaTeX file while keeping correct format
+6. Summary the document (tools) using RAG
+7. Trying to paste the translation again in raw scan files while keeping the local texture, etc

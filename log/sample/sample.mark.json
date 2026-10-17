@@ -1,0 +1,71 @@
+{
+  "image": "sample_preprocessed.png",
+  "candidate": "sample_ocr.txt",
+  "models": {
+    "blind": "anthropic/claude-sonnet-5.5",
+    "forensic": "anthropic/claude-sonnet-5.5",
+    "judge": "anthropic/claude-opus-5.5"
+  },
+  "current_score_10": 7.0,
+  "current_estimated_wer": 0.08,
+  "final_score_10": 8.6,
+  "final_estimated_wer": 0.04,
+  "estimated_wer_warning": "Model estimate only; use --reference for exact WER.",
+  "rationale": "Candidate A has three structural errors: duplicated header lines ('الجمهورية اليمنية - محافظة شبوة' twice), a misread 'عرماء، الشعبة' that is repeated as 'عرماء الثجة', and an unresolved Gregorian date. The image shows one header block reading 'الجمهورية اليمنية - محافظة شبوة / عرماء الثجة'. The left-side block reads التاريخ ٦/٥/١٤٢٥هـ and الموافق ٢٤/٦/٢٠٠٤م; these two dates are calendar-consistent. The image supports 'معقلهم' over B's 'مقدّم' and 'منصب آل بن بريك' over B's 'منتسب'. The body genealogy lines agree across candidates and match the visible text.",
+  "issues": [
+    "The place name after 'نقل إلى' is ambiguous: the strokes resemble 'حراجنه/حرلضه'. 'حريضة' (B) is a known place and plausible but not certain.",
+    "The word before 'الشيخ' in the last line resembles 'قائمة' (written 'تا ئمة'); B's 'ثامة' is less likely.",
+    "'والباخنيني' may be 'والباخنينين' or 'والباخنفيين'; the ending is unclear.",
+    "'آل بريد' could be 'آل نريد' because the dot placement is faint."
+  ],
+  "candidate_disagreement": {
+    "current_vs_blind_wer": 0.1563517915309446,
+    "current_vs_forensic_wer": 0.0718954248366013,
+    "blind_vs_forensic_wer": 0.0915032679738562
+  },
+  "line_counts": {
+    "current": 32,
+    "blind": 30,
+    "forensic": 30,
+    "final": 30
+  },
+  "final_lines": [
+    "بسم الله الرحمن الرحيم",
+    "الشيخ خميس أحمد الديشي البريكي",
+    "التاريخ ٦/٥/١٤٢٥هـ",
+    "الموافق ٢٤/٦/٢٠٠٤م",
+    "المرفقات",
+    "الجمهورية اليمنية - محافظة شبوة",
+    "عرماء الثجة",
+    "قبيلة آل بريك معقلهم بشبوة وهم :",
+    "محمد بن بريك بن سيف بن حامد بن سار الليل بن يصن بن يا جبر الحميري",
+    "و أخيه علي بن بريك الذي نقل إلى حريضة وبعدها انتقل إلى الشحر",
+    "أما محمد بن بريك بقي في بشبوة وذريته ثلاثة وهم :-",
+    "١- أحمد بن محمد بن بريك ( المكنا أحمد بن الشيخ )",
+    "٢- عمر بن محمد بن بريك ( المكنا عمر بن الشيخ )",
+    "٣- علي بن محمد بن بريك ( المكنا علي بن الشيخ )",
+    "التقسيم العام لاولاد محمد بن بريك :-",
+    "أولاً :- أحمد بن محمد بن بريك وأولاده أربعه :",
+    "① عمر بن أحمد ② عيسى بن أحمد ③ أبوبكر بن أحمد ④ محمد بن أحمد",
+    "تقسيم الفروع كالآتي أبناء أحمد بن الشيخ :-",
+    "① عمر بن أحمد بن الشيخ وأولاده أ- أحمد بن عمر بن محمد جد آل أحمد ب- محمد بن عمر بن محمد",
+    "جد آل عقيل وهم آل غوثان وآل داوود ج- سيف بن عمر بن محمد جد الباسيف",
+    "ثانياً :- عيسى بن أحمد بن الشيخ ، وأولاده هم : آل عبدالرحيم وآل بريد",
+    "ثالثاً :- أبو بكر بن أحمد بن الشيخ ، وأولاده هم : آل نجيب وآل عبدالقوي والباخنيني",
+    "وآل الزبار وهم آل ملكم وآل خضيرل",
+    "رابعاً :- محمد بن أحمد بن الشيخ : مات كلاله هؤلاء أولاد أحمد بن الشيخ",
+    "ثانياً :- عمر بن محمد بن بريك وأولاده أربعه هم : ١- آل سالم بن عمر ٢- آل عبدالله بن عمر",
+    "٣- آل يوسف بن عمر ٤- آل أحمد بن عمر هؤلاء أولاد عمر بن محمد بن الشيخ",
+    "ثالثاً : علي بن محمد بن بريك وأولاده اثنين هم : ١- أحمد بن علي وهم",
+    "آل علي بن أحمد ٢- محمد بن علي وهم آل بام : هؤلاء أولاد علي بن الشيخ",
+    "هذه الشجرة منقولة من قائمة الشيخ محمد بن عبدالرحمن بن محمد المكنا الديشي",
+    "منصب آل بن بريك"
+  ],
+  "original_image": "sample.jpg",
+  "evaluation_image": "sample_preprocessed.png",
+  "selection": {
+    "accepted_retry": true,
+    "authoritative_output": "sample_ocr.txt",
+    "rule": "score must not decrease, estimated WER must not increase, and one must improve"
+  }
+}

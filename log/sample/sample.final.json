@@ -1,0 +1,217 @@
+{
+  "document_type": "mixed",
+  "classification_confidence": 0.72,
+  "models": {
+    "primary": "anthropic/claude-sonnet-5.5",
+    "secondary": "openai/gpt-6-luna",
+    "recheck": "anthropic/claude-sonnet-5.5"
+  },
+  "preprocessing": {
+    "original_width": 960,
+    "original_height": 1242,
+    "output_width": 2000,
+    "output_height": 2588,
+    "upscale": 2.0833,
+    "perspective_applied": false,
+    "orientation_suggested": 0,
+    "orientation_applied": 0,
+    "orientation_confidence": 0.0,
+    "orientation_scores": {
+      "0": -10.0,
+      "90": -10.0,
+      "180": -10.0,
+      "270": -10.0
+    },
+    "deskew_angle": -1.0024,
+    "blur_variance": 792.57,
+    "contrast_std": 52.98,
+    "low_resolution_input": true
+  },
+  "preprocessed_image": "sample_preprocessed.png",
+  "paragraph_detection": {
+    "quality": {
+      "passed": false,
+      "reason": "regions cover almost the full page (100.0%)",
+      "boxes": 1,
+      "ink_capture": 1.0,
+      "box_coverage": 1.0
+    },
+    "boxes": [
+      {
+        "x0": 0,
+        "y0": 0,
+        "x1": 2000,
+        "y1": 2588,
+        "ink_fraction": 0.1285
+      }
+    ]
+  },
+  "crop_route": {
+    "attempted": false,
+    "selected": "full",
+    "reason": "crop OCR disabled for mixed page"
+  },
+  "detected_line_bands": 31,
+  "lines": [
+    {
+      "text": "بسم الله الرحمن الرحيم",
+      "flag": "agreed",
+      "similarity": 1.0
+    },
+    {
+      "text": "الشيخ خميس أحمد الديشي البريكي",
+      "flag": "agreed",
+      "similarity": 0.9667
+    },
+    {
+      "text": "الجمهورية اليمنية - محافظة شبوة",
+      "flag": "single_source_b",
+      "similarity": 0.0
+    },
+    {
+      "text": "عرماء، الشعبة",
+      "flag": "single_source_b",
+      "similarity": 0.0
+    },
+    {
+      "text": "التاريخ ٦/٥/١٤٢٥هـ",
+      "flag": "agreed",
+      "similarity": 0.9714
+    },
+    {
+      "text": "[[UNRESOLVED | A: الموافق ٢٤/٦/٢٠٠٤م | B: المرافق ٢٤/٦/١٤٢؟]]",
+      "flag": "unresolved",
+      "similarity": 0.7429
+    },
+    {
+      "text": "المرفقات",
+      "flag": "agreed",
+      "similarity": 1.0
+    },
+    {
+      "text": "الجمهورية اليمنية - محافظة شبوة",
+      "flag": "single_source_a",
+      "similarity": 0.0
+    },
+    {
+      "text": "عرماء الثجة",
+      "flag": "single_source_a",
+      "similarity": 0.0
+    },
+    {
+      "text": "قبيلة آل بريك معقلهم بشبوة وهم :",
+      "flag": "single_source_a",
+      "similarity": 0.5814
+    },
+    {
+      "text": "محمد بن بريك بن سيف بن حامد بن سار الليل بن يصن بن يا جبر الحميري",
+      "flag": "single_source_a",
+      "similarity": 0.4915
+    },
+    {
+      "text": "و أخيه علي بن بريك الذي نقل إلى حرائجنه وبعدها انتقل إلى الشحر",
+      "flag": "single_source_a",
+      "similarity": 0.6197
+    },
+    {
+      "text": "أما محمد بن بريك بقي في بشبوة وذريته ثلاثة وهم :-",
+      "flag": "single_source_a",
+      "similarity": 0.4909
+    },
+    {
+      "text": "١- أحمد بن محمد بن بريك ( المكنا أحمد بن الشيخ )",
+      "flag": "single_source_a",
+      "similarity": 0.7835
+    },
+    {
+      "text": "٢- عمر بن محمد بن بريك ( المكنا عمر بن الشيخ )",
+      "flag": "single_source_a",
+      "similarity": 0.7742
+    },
+    {
+      "text": "٣- علي بن محمد بن بريك ( المكنا علي بن الشيخ )",
+      "flag": "single_source_a",
+      "similarity": 0.7742
+    },
+    {
+      "text": "التقسيم العام لاولاد محمد بن بريك :-",
+      "flag": "single_source_a",
+      "similarity": 0.6933
+    },
+    {
+      "text": "أولاً :- أحمد بن محمد بن بريك وأولاده أربعه :",
+      "flag": "single_source_a",
+      "similarity": 0.6327
+    },
+    {
+      "text": "① عمر بن أحمد ② عيسى بن أحمد ③ أبوبكر بن أحمد ④ محمد بن أحمد",
+      "flag": "single_source_a",
+      "similarity": 0.6508
+    },
+    {
+      "text": "تقسيم الفروع كالآتي أبناء أحمد بن الشيخ :-",
+      "flag": "single_source_a",
+      "similarity": 0.5366
+    },
+    {
+      "text": "① عمر بن أحمد بن الشيخ وأولاده ا- أحمد بن عمر بن محمد جد آل أحمد ب- محمد بن عمر بن محمد",
+      "flag": "single_source_a",
+      "similarity": 0.4091
+    },
+    {
+      "text": "جد آل عقيل وهم آل غوثان وآل داوود ج- سيف بن عمر بن محمد جد الباسيف",
+      "flag": "single_source_a",
+      "similarity": 0.2857
+    },
+    {
+      "text": "ثانياً :- عيسى بن أحمد بن الشيخ وأولاده هم : آل عبد الرحيم وآل بريد",
+      "flag": "single_source_a",
+      "similarity": 0.6838
+    },
+    {
+      "text": "ثالثاً :- أبو بكر بن أحمد بن الشيخ وأولاده هم : آل نجيب وآل عبدالقوي والباخنيني",
+      "flag": "single_source_a",
+      "similarity": 0.5649
+    },
+    {
+      "text": "وآل الزبار وهم آل ملكم وآل خضيرل",
+      "flag": "single_source_a",
+      "similarity": 0.0
+    },
+    {
+      "text": "رابعاً :- محمد بن أحمد بن الشيخ : مات كلاله هؤلاء أولاد أحمد بن الشيخ",
+      "flag": "single_source_a",
+      "similarity": 0.3962
+    },
+    {
+      "text": "ثانياً :- عمر بن محمد بن بريك وأولاده أربعة هم : ١- آل سالم بن عمر ٢- آل عبد الله بن عمر",
+      "flag": "single_source_a",
+      "similarity": 0.3939
+    },
+    {
+      "text": "٣- آل يوسف بن عمر ٤- آل أحمد بن عمر هؤلاء أولاد عمر بن محمد بن الشيخ",
+      "flag": "single_source_a",
+      "similarity": 0.303
+    },
+    {
+      "text": "ثالثاً : علي بن محمد بن بريك وأولاده اثنين هم : ١- أحمد بن علي وهم",
+      "flag": "single_source_a",
+      "similarity": 0.6306
+    },
+    {
+      "text": "آل علي بن أحمد ٢- محمد بن علي وهم آل بام : هؤلاء أولاد علي بن الشيخ",
+      "flag": "single_source_a",
+      "similarity": 0.3871
+    },
+    {
+      "text": "هذه الشجرة منقولة من شجرة الشيخ محمد بن عبد الرحمن بن محمد المكنا الديشي",
+      "flag": "single_source_a",
+      "similarity": 0.4528
+    },
+    {
+      "text": "منصب آل بن بريك",
+      "flag": "single_source_a",
+      "similarity": 0.0
+    }
+  ]
+}

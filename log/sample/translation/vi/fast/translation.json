@@ -1,0 +1,31 @@
+{
+  "source_language": "ar",
+  "target_language": "vi",
+  "target_name": "Vietnamese",
+  "requested_mode": "fast",
+  "effective_mode": "fast",
+  "translation_route": "pivot_local",
+  "models": {
+    "local_direct": null,
+    "pivot_ar_to_en": "Helsinki-NLP/opus-mt-ar-en",
+    "pivot_en_to_target": "Helsinki-NLP/opus-mt-en-vi",
+    "multilingual": null,
+    "judge": null
+  },
+  "candidate_models_are_free": true,
+  "chunks": [
+    {
+      "chunk": 1,
+      "preferred": "local",
+      "differences": [],
+      "notes": "Fast mode used the local route; no API calls were made."
+    }
+  ],
+  "usage": {
+    "calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0
+  },
+  "input": "D:\\projects\\arabic-ocr\\output\\sample\\final.txt",
+  "output": "D:\\projects\\arabic-ocr\\output\\sample\\translations\\vi.txt"
+}

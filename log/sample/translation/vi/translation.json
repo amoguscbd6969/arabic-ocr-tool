@@ -1,0 +1,28 @@
+{
+  "source_language": "ar",
+  "target_language": "vi",
+  "target_name": "Vietnamese",
+  "requested_mode": "verified",
+  "effective_mode": "fast",
+  "models": {
+    "specialist": null,
+    "multilingual": "nvidia/nemotron-3-super-120b-a12b:free",
+    "judge": null
+  },
+  "candidate_models_are_free": true,
+  "chunks": [
+    {
+      "chunk": 1,
+      "preferred": "multilingual",
+      "differences": [],
+      "notes": "No configured Arabic specialist for this target; used multilingual only."
+    }
+  ],
+  "usage": {
+    "calls": 2,
+    "prompt_tokens": 1200,
+    "completion_tokens": 12040
+  },
+  "input": "D:\\projects\\arabic-ocr\\output\\sample\\final.txt",
+  "output": "D:\\projects\\arabic-ocr\\output\\sample\\translations\\vi.txt"
+}

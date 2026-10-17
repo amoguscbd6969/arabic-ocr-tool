@@ -1,0 +1,36 @@
+{
+  "source_language": "ar",
+  "target_language": "en",
+  "target_name": "English",
+  "requested_mode": "verified",
+  "effective_mode": "verified",
+  "models": {
+    "specialist": "Helsinki-NLP/opus-mt-ar-en",
+    "multilingual": "nvidia/nemotron-3-super-120b-a12b:free",
+    "judge": "anthropic/claude-haiku-5.5"
+  },
+  "candidate_models_are_free": true,
+  "chunks": [
+    {
+      "chunk": 1,
+      "candidate_similarity": 0.0204,
+      "preferred": "merged",
+      "differences": [
+        "Specialist candidate contains large hallucinated, repeated garbage text (e.g., 'al-Jabhar' and 'al-Mahd' repetitions) absent from the source and omits most of the genealogy.",
+        "Specialist candidate omits the opening, date lines, place names, the Himyari lineage, and the Huraydah/al-Shihr migration.",
+        "Multilingual candidate leaves most of the source in Arabic rather than translating it.",
+        "Multilingual candidate mistranslates 'Second/Third' headings under Umar and Ali as headings without preserving the original ordinal structure, and leaves 'Abdullah' partly in Arabic script.",
+        "Both candidates lack clear rendering of the 'kalala' phrase and the descendant structure of the Fourth branch.",
+        "Final translation transliterates all names consistently and renders the full source."
+      ],
+      "notes": "Neither candidate is usable as-is. The final text was built from the full Arabic source, with all names, dates (6/5/1425 AH; 24/6/2004 AD), numbering, and genealogical relationships preserved. The source contains no [[...]] location markers, so none are included. Some transliterations (e.g., 'Ar'ma' al-Thajjah', 'Al Buraid') are best-effort and should be checked by a native specialist for standard spelling of tribal and place names."
+    }
+  ],
+  "usage": {
+    "calls": 2,
+    "prompt_tokens": 3524,
+    "completion_tokens": 7502
+  },
+  "input": "D:\\projects\\arabic-ocr\\output\\sample\\final.txt",
+  "output": "D:\\projects\\arabic-ocr\\output\\sample\\translations\\en.txt"
+}
