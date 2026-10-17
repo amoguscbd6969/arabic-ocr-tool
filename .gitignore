@@ -1,4 +1,5 @@
 .env*
+TODO
 
 __pycache__/
 *.py[cod]
