@@ -1,26 +1,28 @@
+**English** | [Tiếng Việt](README.vi.md) | [العربية](README.ar.md)
+
 # Arabic OCR Pipeline
 
-Arabic OCR Pipeline là công cụ nhận dạng văn bản tiếng Ả Rập từ ảnh và tài liệu hỗn hợp. Các profile có phí kết hợp tiền xử lý ảnh kiểu máy quét tài liệu, nhiều vision-language model qua OpenRouter, so sánh chéo hai bản OCR, kiểm tra lại các dòng bất đồng và evolutionary prompting. Profile `--free` là nhánh local gọn hơn, chỉ dùng một model CRNN-CTC chuyên chữ viết tay Ả Rập.
+Arabic OCR Pipeline extracts Arabic text from images and mixed documents. Paid profiles combine document-scanner-style preprocessing, multiple vision-language models through OpenRouter, independent OCR comparison, targeted rechecks, and evolutionary prompting. The `--free` profile is a smaller local-only path using one Arabic handwriting CRNN-CTC model.
 
-Công cụ hỗ trợ:
+Supported capabilities:
 
-- Ảnh tài liệu: PNG, JPG/JPEG, WebP, BMP, TIFF.
-- PDF và tài liệu Office: PDF, DOC/DOCX, PPT/PPTX/PTT/PTTX, XLS/XLSX, CSV, TSV và TXT.
-- Tài liệu hỗn hợp: lấy chữ đánh máy trực tiếp và chỉ OCR ảnh/trang scan để giảm API call.
-- Dịch từ tiếng Ả Rập sang 13 ngôn ngữ bằng model cục bộ và model miễn phí.
-- Bốn mức chi phí/chất lượng: `--free`, `--lite`, `--high`, `--max`; mặc định là `--lite`.
-- Log đầy đủ cho preprocessing, từng model, đánh giá, bản retry và chi phí ước tính.
+- Document images: PNG, JPG/JPEG, WebP, BMP, and TIFF.
+- PDF and Office documents: PDF, DOC/DOCX, PPT/PPTX/PTT/PTTX, XLS/XLSX, CSV, TSV, and TXT.
+- Mixed documents: extract typed text directly and OCR only embedded images or scanned pages, reducing API calls.
+- Arabic translation into 13 languages with local and free models.
+- Four OCR cost/quality profiles: `--free`, `--lite`, `--high`, and `--max`; the default is `--lite`.
+- Detailed logs for preprocessing, model outputs, evaluation, retries, and estimated cost.
 
 > [!IMPORTANT]
-> Đây là công cụ hỗ trợ đọc tài liệu, không phải hệ thống chứng thực pháp lý. Với tên riêng, số tiền, ngày tháng, chữ viết tay hoặc tài liệu có hệ quả pháp lý, luôn cần người biết tiếng Ả Rập đối chiếu với ảnh gốc.
+> This is a document-reading aid, not a legally certified transcription system. Names, monetary values, dates, handwriting, and legally significant content must always be checked against the source image by an Arabic reader.
 
 ## 1. Documentation
 
-Phần này dùng một cú pháp chung cho ảnh, PDF và tài liệu Office. Các tùy chọn chỉ thay đổi cách chương trình xử lý input; người dùng không cần gọi từng module riêng lẻ.
+The same command format works for images, PDFs, and Office files. Options change how the input is processed; individual modules do not need to be called separately.
 
-### 1.1 Chuẩn bị môi trường
+### 1.1 Environment setup
 
-Yêu cầu Python 3.10 trở lên; Python 3.12 được khuyến nghị trên Windows.
+Python 3.10 or later is required. Python 3.12 is recommended on Windows.
 
 ```powershell
 python -m venv .venv
@@ -29,164 +31,161 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-Tạo `.env` trong thư mục dự án nếu lệnh sẽ gọi OpenRouter:
+Create a `.env` file in the project directory when a command will use OpenRouter:
 
 ```dotenv
 OPENROUTER_API_KEY=sk-or-v1-...
 ```
 
-LibreOffice hoặc Microsoft Office + `pywin32` chỉ cần khi chuyển đổi định dạng Office cũ hoặc render toàn trang Office. Poppler chỉ cần cho chức năng dựa trên `pdf2image`; pipeline PDF chính dùng PyMuPDF. Lần đầu dịch local, Transformers sẽ tải các model Helsinki-NLP rồi lưu vào cache cho những lần sau.
+LibreOffice or Microsoft Office with `pywin32` is only needed for converting legacy Office formats or rendering complete Office pages. Poppler is only needed for `pdf2image` functionality; the primary PDF pipeline uses PyMuPDF. On first use, local translation downloads Helsinki-NLP models through Transformers and caches them.
 
-Profile `--free` dùng package `arabicocr-khatt` và checkpoint `FixFips/arabicocr-khatt`. Lần đầu chạy, package tải checkpoint từ Hugging Face rồi giữ trong cache; các lần sau chạy local. Có thể đặt `ARABICOCR_KHATT_DEVICE=cpu` hoặc `cuda` để chọn thiết bị, và `ARABICOCR_KHATT_UPSCALE` để ghi đè hệ số phóng ảnh (mặc định tự chọn `2.0` nếu ảnh rộng dưới 1500 px).
+The `--free` OCR profile uses `arabicocr-khatt` and the `FixFips/arabicocr-khatt` checkpoint. Its first run downloads the checkpoint from Hugging Face; later runs are local. Set `ARABICOCR_KHATT_DEVICE=cpu` or `cuda` to select a device. `ARABICOCR_KHATT_UPSCALE` overrides the image scale factor; by default, images narrower than 1,500 px use `2.0`.
 
-### 1.2 Cú pháp tổng quát
+### 1.2 General syntax
 
 ```text
 python main.py <INPUT...> [DOCUMENT_MODE] [MODEL_PROFILE] [OCR_OPTIONS] [TRANSLATION_OPTIONS]
 ```
 
-Trong đó:
+- `<INPUT...>` is one or more images or documents. Use an absolute path, a relative path, or only the filename when it is inside `input/`.
+- `[DOCUMENT_MODE]` controls how PDFs and Office files containing both typed text and scans are handled.
+- `[MODEL_PROFILE]` controls OCR cost and quality; omitting it selects `--lite`.
+- `[OCR_OPTIONS]` control preprocessing, evolutionary prompting, and cache reuse.
+- `[TRANSLATION_OPTIONS]` allow OCR and translation in one command.
 
-- `<INPUT...>` là một hoặc nhiều ảnh/tài liệu. Có thể dùng đường dẫn đầy đủ, đường dẫn tương đối hoặc chỉ ghi tên file nếu file nằm trong `input/`.
-- `[DOCUMENT_MODE]` quyết định cách xử lý PDF/Office có cả chữ đánh máy và ảnh scan.
-- `[MODEL_PROFILE]` quyết định mức chi phí và chất lượng OCR; nếu bỏ qua sẽ dùng `--lite`.
-- `[OCR_OPTIONS]` điều khiển preprocessing, evolutionary prompting và việc dùng lại kết quả.
-- `[TRANSLATION_OPTIONS]` có thể vừa OCR vừa dịch trong cùng một lệnh.
-
-Ví dụ tổng quát:
+Example:
 
 ```powershell
 python main.py report.pdf --document-mode mixed --lite --translate en
 ```
 
-Các định dạng được hỗ trợ:
+Supported image extensions are `.png`, `.jpg`, `.jpeg`, `.webp`, `.bmp`, `.tif`, and `.tiff`. Supported document extensions are `.pdf`, `.doc`, `.docx`, `.ppt`, `.pptx`, `.ptt`, `.pttx`, `.xls`, `.xlsx`, `.csv`, `.tsv`, and `.txt`.
 
-- Ảnh: `.png`, `.jpg`, `.jpeg`, `.webp`, `.bmp`, `.tif`, `.tiff`.
-- Tài liệu: `.pdf`, `.doc`, `.docx`, `.ppt`, `.pptx`, `.ptt`, `.pttx`, `.xls`, `.xlsx`, `.csv`, `.tsv`, `.txt`.
+### 1.3 Document processing modes
 
-### 1.3 Chọn cách xử lý tài liệu
-
-Với một ảnh đơn, chỉ cần truyền ảnh vào lệnh:
+For a single image:
 
 ```powershell
 python main.py sample_1.jpg
 ```
 
-Với PDF hoặc Office, mặc định là `--document-mode mixed`:
+PDF and Office files default to `--document-mode mixed`:
 
 ```powershell
 python main.py report.pdf
-# Tương đương:
+# Equivalent:
 python main.py report.pdf --document-mode mixed
 ```
 
-Chế độ `mixed` phù hợp cho tài liệu thông thường có cả chữ đánh máy và ảnh:
+In `mixed` mode:
 
-- Chữ đánh máy được trích xuất trực tiếp, không đưa qua OCR và không tốn API cho phần đó.
-- Trang scan và ảnh nhúng đủ lớn mới được tiền xử lý và OCR.
-- Các marker như `[[OCR_PAGE_SCAN | page 2]]` và `[[OCR_IMAGE | page 3, image 1]]` ghi lại trang, loại vùng và thứ tự ảnh.
+- Typed text is extracted directly, with no OCR or API cost for that text.
+- Only scanned pages and sufficiently large embedded images are preprocessed and OCRed.
+- Markers such as `[[OCR_PAGE_SCAN | page 2]]` and `[[OCR_IMAGE | page 3, image 1]]` preserve page, region type, and image order.
 
-Nếu muốn OCR mọi trang đúng như hình nhìn thấy, kể cả phần đã có chữ đánh máy, dùng:
+To OCR every page exactly as rendered, including existing typed text, use:
 
 ```powershell
 python main.py report.pdf --document-mode full-ocr
 ```
 
-`full-ocr` tốn thời gian và API call hơn, nhưng hữu ích khi text layer bị lỗi, thứ tự đọc phức tạp hoặc cần kiểm tra bố cục hiển thị. Với file Office, chế độ này cần LibreOffice hoặc Microsoft Office để render tài liệu.
+`full-ocr` is slower and uses more API calls, but is useful for broken text layers, complex reading order, or visual-layout verification. Full-page Office rendering requires LibreOffice or Microsoft Office.
 
-### 1.4 Chọn profile model
+### 1.4 OCR model profiles
 
-| Profile | Mục tiêu | Model điển hình |
+| Profile | Purpose | Typical models |
 |---|---|---|
-| `--free` | OCR local, không API | ArabicOCR_KHATT CRNN-CTC, một model duy nhất |
-| `--lite` (mặc định) | Chi phí thấp, mặc định | Claude Haiku 5.5 và GPT-6 Luna |
-| `--high` | Chất lượng cao như pipeline ban đầu | Haiku/Luna cho tác vụ nhẹ, Sonnet 5.5 cho OCR khó, Opus 5.5 để adjudicate |
-| `--max` | Chất lượng cao nhất, chi phí cao | Claude Opus 5.5 và GPT-6 Astra Pro |
+| `--free` | Local OCR, no API | ArabicOCR_KHATT CRNN-CTC only |
+| `--lite` (default) | Low-cost default | Claude Haiku 5.5 and GPT-6 Luna |
+| `--high` | Higher quality | Haiku/Luna for light tasks, Sonnet 5.5 for difficult OCR, Opus 5.5 for adjudication |
+| `--max` | Highest quality and cost | Claude Opus 5.5 and GPT-6 Astra Pro |
 
-Các cờ profile loại trừ lẫn nhau. Với `--free`, pipeline bỏ classifier, candidate B, recheck, crop OCR bằng model khác và evolutionary prompting. Ảnh trang cao được chia thành các dải tại vùng ít nét mực để tránh page segmenter gộp dòng; mọi dải vẫn chỉ được nhận dạng bởi ArabicOCR_KHATT. Nếu model không tải/chạy được, lệnh báo lỗi rõ ràng và dừng, không âm thầm fallback sang OpenRouter.
+Profile flags are mutually exclusive. Under `--free`, the pipeline skips classification, candidate B, cross-model rechecks, crop OCR by another model, and evolutionary prompting. Tall pages are split at low-ink regions so the recognizer does not merge lines; every strip is still recognized only by ArabicOCR_KHATT. If the model cannot load or run, the command stops with a clear error and never silently falls back to OpenRouter.
 
-Chọn nhanh theo nhu cầu:
+Selection guide:
 
-- Không truyền profile: dùng `--lite`, phù hợp cho phần lớn trường hợp.
-- Không muốn tốn phí/API cho OCR chữ viết tay: dùng `--free`; model phù hợp nhất với ảnh gần miền dữ liệu KHATT.
-- Tài liệu khó hoặc cần độ chính xác cao hơn: dùng `--high`.
-- Chỉ dùng `--max` cho tài liệu quan trọng sau khi đã ước lượng chi phí.
+- No profile flag: `--lite`, suitable for most cases.
+- No paid/API handwriting OCR: `--free`, best for images close to the KHATT data domain.
+- Difficult documents or higher accuracy: `--high`.
+- Important documents after estimating cost: `--max`.
 
-### 1.5 Các công thức chạy thường dùng
+### 1.5 Common commands
 
-OCR một hoặc nhiều file bằng cấu hình mặc định:
+OCR one or more files with the default profile:
 
 ```powershell
 python main.py sample_1.jpg
 python main.py sample_1.jpg sample_2.jpg report.pdf
 ```
 
-OCR nhanh hơn bằng cách bỏ hai retry prompt và bước visual adjudication của evolutionary prompting:
+Faster OCR by skipping the two retry prompts and visual adjudication:
 
 ```powershell
 python main.py sample_1.jpg --lite --no-evolve
 ```
 
-Chế độ này giảm API call nhưng có thể giảm chất lượng khi hai bản OCR ban đầu bất đồng. Riêng `--free` luôn bỏ evolution và chỉ chạy ArabicOCR_KHATT local, nên không cần thêm `--no-evolve`.
+This reduces API calls but may reduce quality when initial candidates disagree. `--free` always skips evolution and runs only local ArabicOCR_KHATT, so `--no-evolve` is unnecessary there.
 
-Chỉ xem ảnh sau preprocessing, hoàn toàn không gọi API:
+Generate only the preprocessed image, with no API calls:
 
 ```powershell
 python main.py sample_1.jpg --preprocess-only
 ```
 
-OCR và dịch sang nhiều ngôn ngữ trong một lần chạy:
+OCR and translate into multiple languages:
 
 ```powershell
 python main.py sample_1.jpg --translate en --translate vi
 ```
 
-Dịch nhanh bằng model local, không phát sinh OpenRouter API call cho **phần dịch**:
+Use local-only translation with no OpenRouter calls for the translation stage:
 
 ```powershell
 python main.py sample_1.jpg --translate vi --translation-mode fast
 ```
 
-Lưu ý rằng OCR vẫn có thể gọi API. Muốn dịch một kết quả OCR đã tồn tại mà không OCR lại, giữ nguyên `output/<tên-tệp>/final.txt` và chạy lệnh có `--translate`; chương trình sẽ dùng cache nếu input và document mode còn phù hợp.
-
-Chỉ khi muốn bỏ cache và OCR lại mới thêm:
+OCR may still call an API. When `output/<filename>/final.txt` already exists, a command containing `--translate` reuses it if the input signature and document mode match. Add `--force-ocr` only when OCR must be rerun:
 
 ```powershell
 python main.py sample_1.jpg --translate vi --force-ocr
 ```
 
-### 1.6 Dịch thuật
+### 1.6 Translation
 
-`--translate` có thể lặp lại. Các mã được cấu hình sẵn là `en`, `vi`, `fr`, `de`, `es`, `it`, `pt`, `ru`, `zh`, `ja`, `ko`, `tr` và `id`.
+`--translate` is repeatable. Configured codes are `en`, `vi`, `fr`, `de`, `es`, `it`, `pt`, `ru`, `zh`, `ja`, `ko`, `tr`, and `id`.
 
-- `--translation-mode verified` là mặc định: tạo bản local direct/pivot, tạo thêm ứng viên multilingual miễn phí rồi dùng judge để chọn. Profile dịch mặc định là `free`, độc lập với profile OCR; vì vậy `--lite` trong ví dụ dưới chỉ áp dụng cho OCR. Chế độ này vẫn gọi OpenRouter nhưng mặc định chỉ dùng model miễn phí.
-- `--translation-mode fast`: chỉ dùng tuyến dịch local direct hoặc Arabic → English → ngôn ngữ đích; không gọi OpenRouter cho phần dịch.
+- `--translation-mode verified` is the default. It creates a local direct/pivot candidate, adds a free multilingual candidate, and uses a judge to select the result. Translation has its own `free` profile by default, independent of the OCR profile. It still calls OpenRouter, but uses free models unless overridden.
+- `--translation-mode fast` uses only local direct translation or Arabic → English → target. It makes no OpenRouter calls for translation.
 
-Muốn chủ động dùng judge trả phí, thêm `--translation-profile lite`, `high` hoặc `max`. Nếu không truyền tùy chọn này, chương trình dùng `--translation-profile free`.
+To use a paid judge, add `--translation-profile lite`, `high`, or `max`. Without this option, `--translation-profile free` is used.
 
-Ví dụ dịch một PDF hỗn hợp sang Anh và Việt:
+Example: translate a mixed PDF into English and Vietnamese. Here `--lite` applies only to OCR, while translation remains `free`:
 
 ```powershell
 python main.py report.pdf --document-mode mixed --lite `
   --translate en --translate vi --translation-mode verified
 ```
 
-### 1.7 Tham chiếu CLI chính
+To use free OCR but a lite translation judge:
 
-| Tùy chọn | Ý nghĩa |
+```powershell
+python main.py report.pdf --free --translate vi --translation-profile lite
+```
+
+### 1.7 Main CLI reference
+
+| Option | Meaning |
 |---|---|
-| `--free`, `--lite`, `--high`, `--max` | Chọn profile OCR; mặc định `lite` |
-| `--no-evolve` | Bỏ blind pass, forensic pass và final adjudication |
-| `--preprocess-only` | Chỉ tạo ảnh đã xử lý và report, không OCR |
-| `--document-mode mixed` | Trích xuất chữ đánh máy, chỉ OCR ảnh/scan |
-| `--document-mode full-ocr` | Render và OCR toàn bộ trang |
-| `--translate LANG` | Dịch output; có thể lặp lại nhiều lần |
-| `--translation-mode verified` | So sánh ứng viên local và multilingual rồi kiểm chứng |
-| `--translation-mode fast` | Chỉ dùng model local, không gọi OpenRouter |
-| `--translation-profile free\|lite\|high\|max` | Chọn profile judge cho bản dịch; mặc định `free` |
-| `--force-ocr` | Không dùng OCR cache khi dịch |
-
-Xem toàn bộ trợ giúp:
+| `--free`, `--lite`, `--high`, `--max` | Select OCR profile; default: `lite` |
+| `--no-evolve` | Skip blind pass, forensic pass, and final adjudication |
+| `--preprocess-only` | Write the enhanced image and report without OCR |
+| `--document-mode mixed` | Extract typed text and OCR only images/scans |
+| `--document-mode full-ocr` | Render and OCR every page |
+| `--translate LANG` | Translate output; may be repeated |
+| `--translation-mode verified` | Compare local and multilingual candidates, then verify |
+| `--translation-mode fast` | Local translation only; no OpenRouter calls |
+| `--translation-profile free\|lite\|high\|max` | Select translation judge profile; default: `free` |
+| `--force-ocr` | Ignore an existing OCR cache before translation |
 
 ```powershell
 python main.py --help
@@ -194,40 +193,40 @@ python mark.py --help
 python translate.py --help
 ```
 
-Không có cờ `--fast` chung cho toàn pipeline. Cấu hình gần nhất với “OCR nhanh” là `--lite --no-evolve`; còn `--translation-mode fast` chỉ làm phần dịch nhanh và không dùng API.
+There is no pipeline-wide `--fast` flag. The closest fast OCR setup is `--lite --no-evolve`; `--translation-mode fast` only affects translation.
 
-### 1.8 Output, log và cache
+### 1.8 Output, logs, and cache
 
 ```text
 arabic-ocr/
-├── input/                         # ảnh/tài liệu đầu vào
+├── input/
 │   └── sample_1.jpg
-├── log/<tên-tệp>/                # preprocessing, transcript model và report
-│   ├── <tên-tệp>_preprocessed.png
-│   ├── <tên-tệp>_modelA.txt
-│   ├── <tên-tệp>_modelB.txt
-│   ├── <tên-tệp>_draft.txt
-│   ├── <tên-tệp>_retry.txt
-│   ├── <tên-tệp>.final.json
-│   └── <tên-tệp>.mark.json
-└── output/<tên-tệp>/
-    ├── final.txt                  # OCR cuối cùng
-    └── translations/<lang>.txt   # bản dịch, nếu có
+├── log/<filename>/
+│   ├── <filename>_preprocessed.png
+│   ├── <filename>_modelA.txt
+│   ├── <filename>_modelB.txt
+│   ├── <filename>_draft.txt
+│   ├── <filename>_retry.txt
+│   ├── <filename>.final.json
+│   └── <filename>.mark.json
+└── output/<filename>/
+    ├── final.txt
+    └── translations/<lang>.txt
 ```
 
-Cache OCR chỉ được tự động xét khi lệnh có `--translate` và không có `--force-ocr`. Nếu chỉ chạy `python main.py sample_1.jpg`, pipeline sẽ OCR lại.
+OCR cache is considered automatically only when the command contains `--translate` and does not contain `--force-ocr`. Running `python main.py sample_1.jpg` alone performs OCR again.
 
-Sau mỗi lệnh, chương trình in số API call, token và chi phí. Nếu OpenRouter trả `usage.cost`, chi phí thực tế được ưu tiên; nếu không, `calculate_cost.py` dùng bảng giá ước tính. Có thể ghi đè bảng giá bằng biến `OPENROUTER_PRICE_OVERRIDES`.
+After each command, the program prints API calls, tokens, and cost. Actual `usage.cost` from OpenRouter takes priority; otherwise `calculate_cost.py` estimates cost. Override its price table with `OPENROUTER_PRICE_OVERRIDES`.
 
-### 1.9 Đánh giá output
+### 1.9 Output evaluation
 
-Không có ground truth, `mark.py` chỉ tạo điểm và WER ước lượng bằng visual judge:
+Without ground truth, `mark.py` produces a score and estimated WER through a visual judge:
 
 ```powershell
 python mark.py input/sample_1.jpg output/sample_1/final.txt --lite
 ```
 
-Có transcript chuẩn do người duyệt, thêm `--reference` để tính WER/CER thật bằng Levenshtein:
+With a human-reviewed transcript, use `--reference` for exact Levenshtein WER/CER:
 
 ```powershell
 python mark.py input/sample_1.jpg output/sample_1/final.txt `
@@ -235,271 +234,191 @@ python mark.py input/sample_1.jpg output/sample_1/final.txt `
   --report log/sample_1/exact-evaluation.json
 ```
 
-## 2. Thuật toán và thiết kế giải pháp
+## 2. Algorithm and solution design
 
-### 2.1 Tổng quan
+### 2.1 Overview
 
 ```mermaid
 flowchart TD
-    A[Ảnh / PDF / Office / bảng tính] --> B{Loại input}
-    B -->|Ảnh| C[Preprocess]
-    B -->|Tài liệu mixed| D[Trích xuất chữ đánh máy và ảnh]
-    B -->|Tài liệu full-ocr| E[Render từng trang]
-    D -->|Text| Z[Ghép trực tiếp vào output]
-    D -->|Ảnh hoặc scan| C
+    A[Image / PDF / Office / spreadsheet] --> B{Input type}
+    B -->|Image| C[Preprocess]
+    B -->|Mixed document| D[Extract typed text and images]
+    B -->|Full OCR| E[Render each page]
+    D -->|Text| Z[Append directly to output]
+    D -->|Image or scan| C
     E --> C
-    C --> F[Phân loại printed / handwritten / mixed]
+    C --> F[Classify printed / handwritten / mixed]
     F --> G[OCR model A]
-    F --> H[OCR model B độc lập]
-    G --> I[Căn chỉnh dòng bằng dynamic programming]
+    F --> H[Independent OCR model B]
+    G --> I[Dynamic-programming line alignment]
     H --> I
-    I --> J{Hai bản có đồng thuận?}
-    J -->|Có| K[Giữ dòng; audit ngẫu nhiên 5%]
-    J -->|Không| L[Crop dòng và recheck bằng vision model]
+    I --> J{Candidates agree?}
+    J -->|Yes| K[Keep line; audit random 5%]
+    J -->|No| L[Crop line and visually recheck]
     K --> M[Baseline OCR]
     L --> M
-    M --> N{Evolution bật?}
-    N -->|Không| O[final.txt]
-    N -->|Có| P[Blind pass + forensic pass]
+    M --> N{Evolution enabled?}
+    N -->|No| O[final.txt]
+    N -->|Yes| P[Blind pass + forensic pass]
     P --> Q[Visual adjudication]
-    Q --> R{Điểm không giảm và estimated WER không tăng?}
-    R -->|Có cải thiện| O
-    R -->|Không| S[Giữ baseline]
+    Q --> R{Score not lower and estimated WER not higher?}
+    R -->|Improved| O
+    R -->|No| S[Keep baseline]
     S --> O
 ```
 
-### 2.2 Phần 1 - OCR chính
+### 2.2 Main OCR pipeline
 
-#### Bước 1: Input routing
+#### Step 1: Input routing
 
-Ảnh đi thẳng vào pipeline OCR. Với PDF/Office ở chế độ `mixed`, `convert.py` tạo chuỗi `DocumentPart` theo thứ tự:
+Images enter OCR directly. For PDF/Office in `mixed` mode, `convert.py` creates an ordered sequence of `DocumentPart` values: `text` is extracted directly, while `image` identifies a scanned page or sufficiently large embedded image requiring OCR. A PDF page is treated as scanned when a raster covers roughly 60% or more of it, or when no text layer exists. `full-ocr` renders every page at 220 DPI.
 
-- `text`: chữ đánh máy được lấy trực tiếp;
-- `image`: trang scan hoặc ảnh nhúng đủ lớn cần OCR.
+#### Step 2: Preprocessing
 
-PDF có raster phủ ít nhất khoảng 60% trang hoặc không có text layer được xem là scan. Chế độ `full-ocr` render tất cả trang ở 220 DPI trước khi OCR.
+`preprocess.py` runs on CPU: it detects document edges and applies perspective correction when reliable, deskews small angles, upscales toward 2,000 px width (up to 5×), estimates the background, normalizes lighting, applies CLAHE and unsharp masking, and creates a binary ink mask for layout analysis.
 
-#### Bước 2: Preprocessing
+Automatic orientation rotation is currently disabled: `main.py` calls preprocessing with `apply_orientation=False`. The heuristic recommendation remains in metadata but is not applied.
 
-`preprocess.py` thực hiện hoàn toàn trên CPU:
+#### Step 3: Paragraph crops
 
-1. Tìm biên trang và perspective crop nếu hình học đủ tin cậy.
-2. Deskew góc nghiêng nhỏ.
-3. Upscale chiều rộng tới khoảng 2.000 px, tối đa 5 lần.
-4. Chuyển grayscale và ước lượng nền bằng Gaussian blur.
-5. Chuẩn hóa ánh sáng bằng phép chia nền.
-6. Tăng tương phản cục bộ bằng CLAHE.
-7. Unsharp masking và tạo binary ink mask cho bước phát hiện layout.
+Morphology removes borders and long rules, joins characters into word/paragraph regions, merges nearby boxes, and sorts reading order from top to bottom and right to left. A quality gate requires a reasonable region count, at least 72% ink coverage, and boxes that are not effectively the whole page. Otherwise, full-page OCR is used.
 
-Pipeline hiện **không tự xoay orientation**: `main.py` gọi preprocessing với `apply_orientation=False`. Heuristic vẫn ghi orientation đề xuất vào metadata, nhưng không áp dụng phép xoay.
+For printed pages, both full-page and crop OCR are produced, and a vision judge selects the more complete, correctly ordered output. If judging fails, crops are selected only when they retain at least 90% of Arabic characters and contain fewer `[غير واضح]` markers.
 
-#### Bước 3: Phát hiện paragraph crop
+#### Step 4: Document classification
 
-Binary ink mask được xử lý morphology để:
+The vision classifier returns `{"type": "printed|handwritten|mixed", "confidence": 0.0}`. A `printed` page below 70% confidence is routed as `mixed` to avoid an overly weak model path.
 
-- bỏ đường viền và đường kẻ dài;
-- nối ký tự thành word/paragraph region;
-- gộp các box lân cận;
-- sắp thứ tự từ trên xuống, và phải sang trái trong cùng hàng.
+#### Step 5: Independent OCR passes
 
-Crop chỉ được dùng khi quality gate đạt yêu cầu: số vùng hợp lý, bắt được ít nhất 72% ink và không gần tương đương toàn trang. Nếu không đạt, pipeline quay về full-page OCR.
+Model A is selected by page type; model B supplies an independent second opinion. Prompts require verbatim transcription, preserved diacritics when visible, no correction or translation, and `[غير واضح]` only for genuinely unreadable spans.
 
-Với trang `printed`, chương trình OCR cả trang và từng crop, sau đó vision judge chọn bản giữ đủ nội dung và đúng thứ tự hơn. Nếu judge lỗi, heuristic chỉ chọn crop khi giữ ít nhất 90% ký tự Ả Rập và có ít `[غير واضح]` hơn.
+Lines are globally aligned through dynamic programming. Gap cost is `0.45`; normalized similarity of at least `0.85`, with no disagreement over `[غير واضح]`, counts as agreement.
 
-#### Bước 4: Phân loại tài liệu
+#### Step 6: Resolving disagreement
 
-Vision classifier trả về:
+- `agree`: keep A and audit a random 5%.
+- `abstention`: if one model abstains, prefer the other.
+- `single_source`: retain the only line but record its source.
+- `dispute`: project the aligned block onto detected image bands, crop it, and visually recheck that line.
+- Failed recheck: preserve both versions as `[[UNRESOLVED | A: ... | B: ...]]` rather than silently guessing.
 
-```json
-{"type": "printed|handwritten|mixed", "confidence": 0.0}
-```
+#### Step 7: Evolutionary prompting
 
-Trang `printed` có confidence dưới 70% được chuyển sang `mixed` để tránh dùng tuyến model yếu cho ảnh khó.
+After the baseline, `mark.py` produces a blind transcription to reduce anchoring and a forensic pass focused on dates, numbers, names, dots, and omitted lines. A visual judge compares the image, baseline, blind pass, and forensic pass, generating a retry with score/WER estimates.
 
-#### Bước 5: Hai lượt OCR độc lập
+The retry replaces the baseline only if its score is not lower, estimated WER is not higher, and at least one metric strictly improves. Both candidates and the decision remain in `log/`.
 
-- Model A được chọn theo loại trang.
-- Model B là model độc lập để tạo một “second opinion”.
-- Prompt yêu cầu chép nguyên văn, giữ dấu nếu có, không sửa chính tả, không dịch và dùng `[غير واضح]` cho span thực sự không đọc được.
+#### Step 8: Cost accounting and recovery
 
-Hai danh sách dòng được căn chỉnh toàn cục bằng dynamic programming. Chi phí gap là `0.45`; hai dòng được xem là đồng thuận khi similarity chuẩn hóa đạt ít nhất `0.85` và không có bất đồng về `[غير واضح]`.
+API usage is aggregated per model. `--free` makes no OCR API calls and records ArabicOCR_KHATT engine, duration, and errors while retaining the model in memory for batch reuse. Other profiles record OpenRouter usage for `calculate_cost.py`.
 
-#### Bước 6: Xử lý bất đồng
+## 3. Translation pipeline
 
-Mỗi block sau căn chỉnh được xử lý theo trạng thái:
+### 3.1 Goals
 
-- `agree`: giữ bản A; 5% số dòng đồng thuận được audit ngẫu nhiên.
-- `abstention`: một model báo không rõ, ưu tiên model còn lại.
-- `single_source`: giữ dòng duy nhất nhưng gắn cờ nguồn.
-- `dispute`: dùng phép chiếu vị trí dòng lên các line band phát hiện từ ảnh, crop vùng tương ứng và yêu cầu model recheck đúng một dòng.
-- Recheck thất bại: giữ cả A/B trong marker `[[UNRESOLVED | A: ... | B: ...]]` thay vì âm thầm đoán.
+Translation prioritizes fidelity over style: preserve names, dates, numbers, headings, paragraph order, and `[[OCR_...]]` markers; never summarize or invent content. OpenRouter candidates are free models, and `fast` makes no OpenRouter translation calls.
 
-#### Bước 7: Evolutionary prompting
-
-Sau baseline, `mark.py` tạo thêm hai ứng viên:
-
-1. **Blind pass**: chép lại độc lập, không nhìn candidate để giảm anchoring bias.
-2. **Forensic pass**: nhìn candidate nhưng tập trung vào ngày, số, tên riêng, nét chấm và dòng bị thiếu.
-3. **Visual adjudication**: judge xem ảnh cùng baseline, blind và forensic để tạo bản retry và ước lượng score/WER.
-
-Retry chỉ thay thế baseline khi đồng thời:
-
-- điểm cuối không thấp hơn điểm hiện tại;
-- estimated WER không cao hơn;
-- ít nhất một trong hai chỉ số được cải thiện nghiêm ngặt.
-
-Baseline, retry, quyết định và lý do đều được giữ trong `log/` để audit.
-
-#### Bước 8: Cost accounting và khả năng phục hồi
-
-Mọi API response được gom usage theo model. Profile `--free` không tạo API call OCR: nó ghi engine, thời gian chạy và lỗi của ArabicOCR_KHATT vào report, đồng thời giữ model trong bộ nhớ để tái sử dụng khi chạy batch. Các profile còn lại tiếp tục ghi usage OpenRouter để `calculate_cost.py` tổng hợp.
-
-## 3. Phần 2 - Dịch
-
-### 3.1 Mục tiêu
-
-Bản dịch ưu tiên độ trung thành hơn văn phong:
-
-- giữ tên riêng, ngày, số, heading và thứ tự đoạn;
-- giữ nguyên marker `[[OCR_...]]` để truy ngược vị trí;
-- không tóm tắt, giải thích hoặc tự bổ sung nội dung;
-- các model sinh candidate qua OpenRouter phải là model miễn phí;
-- `--fast` không tạo OpenRouter API call.
-
-### 3.2 Luồng dịch
+### 3.2 Flow
 
 ```mermaid
 flowchart LR
-    A[Arabic OCR text] --> B{Có local route?}
+    A[Arabic OCR text] --> B{Local route?}
     B -->|Direct: en/fr/de/es| C[OPUS-MT ar → target]
     B -->|Pivot: vi/it/pt/ru/zh/ja/ko/tr/id| D[OPUS-MT ar → en → target]
-    B -->|Không| E[Free multilingual model]
+    B -->|None| E[Free multilingual model]
     C --> F{Mode}
     D --> F
     F -->|fast| G[Final translation]
     F -->|verified| H[Free multilingual candidate]
-    H --> I[Judge so sánh với Arabic source]
+    H --> I[Judge against Arabic source]
     C --> I
     D --> I
     I --> G
     E --> G
 ```
 
-### 3.3 Hai chế độ
+In `verified` mode, a local route is compared with a free multilingual candidate and judged against the Arabic source. Without a local route, the multilingual candidate is used alone. Logs preserve local, pivot, multilingual, diff, and selected outputs.
 
-`verified`:
+In `fast` mode, only local direct or English-pivot models run. The first run may need Internet access to download Hugging Face models. An unsupported local route raises an error instead of silently using an API.
 
-- Nếu có local route: tạo candidate local, tạo thêm candidate multilingual miễn phí, rồi judge đối chiếu cả hai với nguồn Ả Rập.
-- Nếu không có local route: dùng candidate multilingual duy nhất.
-- Log lưu local candidate, English pivot, multilingual candidate, khác biệt và lựa chọn cuối.
+## 4. Effectiveness evaluation
 
-`fast`:
+### 4.1 Four-sample `--lite` case study
 
-- Chỉ dùng local direct hoặc English pivot.
-- Không gọi OpenRouter, nhưng lần đầu có thể cần Internet để tải model Hugging Face.
-- Nếu ngôn ngữ chưa có local route, chương trình báo lỗi thay vì âm thầm gọi API.
+The 2026-10-17 report covered roughly 1,100 words across four images. Its reference was read by an LLM from low-resolution images and was not verified by an Arabic reader. WER/CER was counted manually rather than by Levenshtein alignment, with reported uncertainty of about ±2 WER points for print and ±5 for handwriting.
 
-Các ngôn ngữ cấu hình sẵn: `en`, `vi`, `fr`, `de`, `es`, `it`, `pt`, `ru`, `zh`, `ja`, `ko`, `tr`, `id`.
-
-## 4. Phần 3 - Đánh giá hiệu nghiệm
-
-### 4.1 Đánh giá thủ công từ báo cáo bốn sample (`--lite`)
-
-Báo cáo ngày 2026-10-17 đánh giá khoảng 1.100 từ trên bốn ảnh. Reference được LLM tự đọc từ ảnh độ phân giải thấp và đối chiếu chéo giữa các trang; chưa được người đọc tiếng Ả Rập xác nhận. WER/CER được đếm thủ công, không chạy căn chỉnh Levenshtein, với sai số báo cáo khoảng ±2 điểm WER cho chữ in và ±5 điểm cho chữ viết tay.
-
-| Sample | Nội dung | Điểm tổng thể | WER strict ước lượng | Nhận xét chính |
+| Sample | Content | Overall | Estimated strict WER | Main finding |
 |---|---|---:|---:|---|
-| 1 | Hợp đồng viết tay, khoảng 335 từ | 4/10 | ~32% (28-38%) | Sai nhiều tên, địa danh và cụm pháp lý; có trường hợp paraphrase làm đổi nghĩa |
-| 2 | Ủy quyền Ả Rập + Hebrew | 8/10 | ~4% phần Ả Rập; ~7-8% toàn trang | Thân Ả Rập tốt; tên viết tay Hebrew và dấu/ghi chú còn yếu |
-| 3 | Công văn đánh máy, khoảng 88 từ | 9/10 | ~4.5% | 13 dòng in gần như đúng; ghi chú tay chưa đọc hết |
-| 4 | Trang hợp đồng đánh máy, khoảng 190 từ | 8.5/10 | ~4% chữ in; ~7% nếu tính chữ tay bị bỏ | Chữ in tốt nhưng bỏ sót chữ ký, vân tay và ghi chú tay |
+| 1 | Handwritten contract, ~335 words | 4/10 | ~32% (28–38%) | Many names, places, and legal phrases wrong; some meaning-changing paraphrase |
+| 2 | Arabic + Hebrew authorization | 8/10 | ~4% Arabic; ~7–8% whole page | Arabic body good; handwritten Hebrew names/notes weaker |
+| 3 | Typed letter, ~88 words | 9/10 | ~4.5% | Printed lines nearly correct; handwritten note incomplete |
+| 4 | Typed contract page, ~190 words | 8.5/10 | ~4% print; ~7% including omitted handwriting | Good print, but signatures/fingerprints/notes omitted |
 
-Kết luận từ báo cáo:
+Printed Arabic in samples 2–4 was approximately 3% pooled strict WER, but the sample is too small for general claims. Sample 1 handwriting remained the primary weakness at roughly 32%. Errors include plausible legal rewrites, not just character substitutions. Signatures, stamps, fingerprints, and marginal handwriting are frequently missed.
 
-- Chữ Ả Rập đánh máy trên samples 2-4 đạt khoảng **3% WER strict gộp**, nhưng tập mẫu còn rất nhỏ.
-- Chữ viết tay ở sample 1 vẫn là điểm yếu lớn, khoảng **32% WER strict**.
-- Số tiền và phần lớn ngày chính được đọc đúng, nhưng một năm và đơn vị diện tích ở sample 1 bị đọc sai.
-- Lỗi nguy hiểm không chỉ là nhầm ký tự: model có thể thay từ bằng thuật ngữ pháp lý “hợp lý” hơn hoặc viết lại cả câu.
-- Chữ ký, con dấu, vân tay và ghi chú tay thường bị bỏ sót; cần phát hiện vùng riêng và không được bỏ im lặng.
+### 4.2 Internal `mark.py` reports
 
-### 4.2 Báo cáo nội bộ của `mark.py`
-
-Các file `log/sample_*/sample_*.mark.json` của profile `lite` cho kết quả sau:
-
-| Sample | Score baseline | Score retry | Estimated WER baseline | Estimated WER retry | Retry được chọn |
+| Sample | Baseline score | Retry score | Baseline estimated WER | Retry estimated WER | Retry selected |
 |---|---:|---:|---:|---:|---:|
-| 1 | 4.0 | 6.0 | 45% | 25% | Có |
-| 2 | 5.0 | 7.0 | 20% | 10% | Có |
-| 3 | 7.5 | 8.5 | 5% | 3% | Có |
-| 4 | 4.5 | 7.5 | 22% | 7% | Có |
-| **Trung bình** | **5.25** | **7.25** | **23%** | **11.25%** | **4/4** |
+| 1 | 4.0 | 6.0 | 45% | 25% | Yes |
+| 2 | 5.0 | 7.0 | 20% | 10% | Yes |
+| 3 | 7.5 | 8.5 | 5% | 3% | Yes |
+| 4 | 4.5 | 7.5 | 22% | 7% | Yes |
+| **Average** | **5.25** | **7.25** | **23%** | **11.25%** | **4/4** |
 
-Các con số trên là **self-evaluation của vision judge**, không phải WER đo với transcript chuẩn. Chúng chỉ hữu ích để chọn giữa baseline và retry trong cùng pipeline. Không nên dùng chúng để tuyên bố độ chính xác tuyệt đối hoặc so sánh với OCR system khác.
+These are vision-judge self-evaluations, not ground-truth WER. They are useful only for choosing between candidates inside this pipeline.
 
-### 4.3 Cách xây benchmark đáng tin cậy hơn
+### 4.3 Building a reliable benchmark
 
-1. Nhờ ít nhất một người đọc tiếng Ả Rập tạo transcript chuẩn; với tài liệu pháp lý nên có người thứ hai adjudicate.
-2. Quy định rõ normalization: hamza, `ة/ه`, `ى/ي`, dấu câu, diacritics và cách chấm `[غير واضح]`.
-3. Tách tập printed, handwritten, Arabic/Hebrew, ảnh chụp và scan.
-4. Báo cả WER/CER strict, lenient, tỷ lệ bỏ sót vùng và lỗi theo trường quan trọng như tên/số/ngày.
-5. Không dùng cùng một model vừa tạo reference vừa đánh giá output.
-6. Mở rộng khỏi bốn trang cùng nhóm tài liệu Hebron 1972-1979 trước khi khái quát hóa.
+1. Have an Arabic reader produce ground truth; use a second adjudicator for legal material.
+2. Define normalization for hamza, `ة/ه`, `ى/ي`, punctuation, diacritics, and `[غير واضح]`.
+3. Separate printed, handwritten, Arabic/Hebrew, photographed, and scanned sets.
+4. Report strict and lenient WER/CER, missed-region rate, and critical-field errors for names, numbers, and dates.
+5. Do not use the same model to create both reference and evaluation.
+6. Expand beyond four related Hebron documents from 1972–1979.
 
-## 5. Phần 4 - Ứng dụng
+## 5. Applications
 
-Pipeline phù hợp cho:
+Suitable uses include Arabic archive digitization, preliminary extraction from contracts and forms, full-text search over scanned PDFs, mixed-document text/image separation, traceable multilingual draft translation, and creation of candidates for human correction or ground-truth datasets.
 
-- số hóa kho lưu trữ tiếng Ả Rập;
-- trích xuất sơ bộ hợp đồng, công văn và biểu mẫu;
-- tìm kiếm full-text trên PDF scan;
-- tách chữ đánh máy và vùng ảnh trong tài liệu hỗn hợp;
-- tạo bản nháp dịch đa ngôn ngữ có marker truy nguồn;
-- chuẩn bị candidate để con người hiệu đính hoặc xây ground-truth dataset.
+Do not use unreviewed output for legal, financial, identity, or signature decisions.
 
-Không nên dùng output chưa duyệt để tự động ra quyết định pháp lý, tài chính, nhận dạng cá nhân hoặc xác minh chữ ký.
+## 6. Limitations and roadmap
 
-## 6. Hạn chế và hướng phát triển
+- Orientation correction is disabled; rotate inputs beforehand.
+- Paragraph detection is a CPU heuristic and falls back to full-page OCR for complex layouts.
+- Free endpoints have unstable availability and rate limits; some providers may retain data for model improvement.
+- Evolutionary prompting increases API calls and can share baseline errors.
+- Handwriting, rare names and places, legal terminology, and small regions remain difficult.
+- Four samples are a case study, not a sufficient benchmark.
 
-- Orientation hiện bị tắt trong pipeline chính; ảnh xoay cần được chỉnh trước.
-- Paragraph detector là heuristic CPU; với layout phức tạp nó sẽ chủ động quay về full-page OCR.
-- Free endpoint có rate limit và availability không ổn định; một số nhà cung cấp free có thể lưu dữ liệu để cải thiện model.
-- Evolutionary prompting tăng chất lượng nhưng cũng tăng số API call và có thể cùng mắc lỗi với baseline.
-- Chữ viết tay, tên riêng, địa danh, thuật ngữ pháp lý ít gặp và vùng nhỏ vẫn khó.
-- Chưa có benchmark ground truth đủ lớn; bốn sample hiện tại chỉ là case study.
+Planned work includes human-reviewed ground truth, dedicated detectors for handwriting/signatures/stamps/fingerprints, domain lexicons used only for warnings, cross-page verification of numbers/dates/names, evaluation on larger Arabic document datasets, and DOCX/PDF export with bounding boxes and confidence.
 
-Các hướng tiếp theo:
+## 7. Main modules
 
-1. Tạo bộ ground truth được người đọc tiếng Ả Rập duyệt.
-2. Thêm detector riêng cho handwriting, chữ ký, dấu, tem và vân tay.
-3. Dùng lexicon tên/địa danh theo miền nhưng chỉ để cảnh báo, không tự sửa output.
-4. Đối chiếu chéo số, ngày và tên giữa các trang cùng hồ sơ.
-5. Huấn luyện/evaluate paragraph detector trên Arabic document dataset lớn hơn.
-6. Thêm export DOCX/PDF có bounding box và confidence theo vùng.
-
-## 7. Các module chính
-
-| File | Vai trò |
+| File | Role |
 |---|---|
-| `main.py` | CLI/input routing, orchestration pipeline, alignment, caching, log và output |
-| `paid_ocr.py` | Model profiles trả phí, prompt, OpenRouter client, classify, OCR/crop và recheck |
-| `preprocess.py` | Perspective crop, deskew, tăng chất lượng ảnh và paragraph detection |
-| `convert.py` | Đọc PDF/Office/bảng tính, tách text/ảnh và render toàn trang |
-| `mark.py` | Blind/forensic retry, visual adjudication, WER/CER khi có reference |
-| `translate.py` | Dịch direct/pivot local, multilingual candidate và verification |
-| `calculate_cost.py` | Gom usage và ước tính chi phí theo model |
-| `requirements.txt` | Phiên bản dependency đã dùng trong môi trường dự án |
+| `main.py` | CLI, input routing, orchestration, alignment, caching, logs, and output |
+| `paid_ocr.py` | Paid profiles, prompts, OpenRouter client, classification, OCR/crops, and rechecks |
+| `preprocess.py` | Perspective correction, deskew, enhancement, and paragraph detection |
+| `convert.py` | PDF/Office/spreadsheet reading, text/image separation, and full-page rendering |
+| `mark.py` | Blind/forensic retries, visual adjudication, and reference WER/CER |
+| `translate.py` | Local direct/pivot translation, multilingual candidate, and verification |
+| `calculate_cost.py` | Usage aggregation and model-cost estimation |
+| `requirements.txt` | Dependency versions used in the project environment |
 
-## 8. Lưu ý dành cho người sử dụng
+## 8. User notes
 
-- **Không coi output là bản sao pháp lý đã được chứng thực.** Tên người, địa danh, số tiền, ngày tháng, điều khoản, chữ viết tay, con dấu và chữ ký phải được đối chiếu với tài liệu gốc bởi người biết tiếng Ả Rập.
-- **Chọn đúng document mode.** `mixed` là lựa chọn mặc định cho PDF/Office có text layer tốt; `full-ocr` phù hợp với bản scan hoặc text layer sai nhưng sẽ chậm và tốn nhiều API call hơn.
-- **`--free` chuyên cho chữ viết tay gần KHATT.** Model CRNN-CTC local nhỏ và nhanh hơn PaddleOCR-VL trên CPU, nhưng có thể kém rõ rệt với chữ in, bố cục phức tạp, ảnh cong/mờ hoặc kiểu chữ khác miền huấn luyện. Profile này cố ý không fallback sang API.
-- **`--translation-mode fast` chỉ miễn API cho bước dịch.** Nếu chưa có OCR cache, bước OCR trước đó vẫn gọi model theo profile đã chọn.
-- **Cache không được dùng cho mọi lệnh.** Chương trình chỉ tự phát hiện `final.txt` cũ khi có yêu cầu dịch. Một lệnh OCR thông thường sẽ tạo lại kết quả; dùng `--force-ocr` khi muốn chủ động bỏ cache trong luồng dịch.
-- **Đặt tên file đầu vào khác nhau.** Output được tổ chức theo phần tên trước đuôi file, vì vậy `report.pdf` và `report.jpg` cùng dùng thư mục `output/report/` và có thể ghi đè kết quả của nhau. Đường dẫn có khoảng trắng phải được đặt trong dấu ngoặc kép.
-- **Chữ viết tay vẫn là trường hợp rủi ro cao.** Kết quả thử nghiệm hiện tại tốt hơn đáng kể với chữ in; tài liệu viết tay, ảnh mờ, nghiêng, bị bóng hoặc mất góc cần kiểm tra thủ công kỹ hơn.
-- **Orientation correction hiện đang tắt.** Hãy xoay ảnh về chiều đọc đúng trước khi chạy nếu ảnh bị quay 90°/180° hoặc chụp ngược.
-- **Không nhầm WER ước lượng với WER thật.** Điểm của visual judge và `estimated_wer` chỉ phục vụ so sánh nội bộ. Muốn có WER/CER đáng tin cậy phải dùng transcript ground truth đã được người đọc tiếng Ả Rập duyệt và truyền qua `mark.py --reference`.
-- **Kiểm tra chi phí trước khi chạy batch lớn.** `--high`, `--max`, `full-ocr`, nhiều ngôn ngữ dịch và evolutionary prompting đều làm tăng số lượt gọi. Phần tổng kết cuối lệnh là chi phí thực tế nếu provider cung cấp, nếu không chỉ là ước tính.
-- **Bảo vệ dữ liệu nhạy cảm.** Không commit `.env` hay API key. Ảnh OCR được gửi tới OpenRouter/provider; hãy kiểm tra chính sách lưu dữ liệu trước khi xử lý hồ sơ riêng tư. `log/` chứa ảnh preprocess và transcript trung gian nên cũng phải được bảo vệ như input gốc.
-- **Giữ lại log khi cần kiểm toán lỗi.** Các bản model A/B, retry, đánh giá và báo cáo JSON giúp xác định lỗi xuất hiện ở preprocessing, OCR, adjudication hay dịch thuật; không chỉ dựa vào `final.txt` khi điều tra kết quả sai.
+- **Do not treat output as a certified legal copy.** Verify names, places, money, dates, clauses, handwriting, seals, and signatures with the original and an Arabic reader.
+- **Choose the right document mode.** `mixed` is the default for files with a good text layer; `full-ocr` is slower and more expensive but helps with scans and broken text layers.
+- **`--free` is specialized for KHATT-like handwriting.** It may perform poorly on print, complex layouts, curved/blurred images, or out-of-domain styles, and intentionally has no API fallback.
+- **`--translation-mode fast` only removes API use from translation.** OCR may still call the selected profile unless a valid cache exists.
+- **Cache is translation-specific.** Ordinary OCR commands rerun OCR; use `--force-ocr` to bypass cache explicitly during translation.
+- **Use unique input stems.** `report.pdf` and `report.jpg` both map to `output/report/` and can overwrite one another. Quote paths containing spaces.
+- **Handwriting is high risk.** Blurred, skewed, shadowed, cropped, or handwritten sources require closer review.
+- **Orientation correction is disabled.** Rotate 90°/180° inputs before running.
+- **Estimated WER is not exact WER.** Reliable WER/CER requires human-reviewed ground truth passed through `mark.py --reference`.
+- **Estimate cost before large batches.** `--high`, `--max`, `full-ocr`, multiple translation targets, and evolution all increase calls.
+- **Protect sensitive data.** Never commit `.env` or API keys. OCR images are sent to OpenRouter/providers, while `log/` contains intermediate images and transcripts.
+- **Keep logs for audits.** Model A/B, retry, evaluation, and JSON reports help locate whether an error came from preprocessing, OCR, adjudication, or translation.
