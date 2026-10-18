@@ -4,13 +4,32 @@
     "size": 226722,
     "mtime_ns": 1792206463588816600
   },
-  "model_profile": "lite",
-  "document_type": "mixed",
-  "classification_confidence": 0.6,
+  "model_profile": "free",
+  "document_type": "unclassified",
+  "classification_confidence": null,
+  "model_domain": "Arabic handwriting (KHATT)",
   "models": {
-    "primary": "anthropic/claude-haiku-5.5",
-    "secondary": "openai/gpt-6-luna",
-    "recheck": "anthropic/claude-haiku-5.5"
+    "primary": "FixFips/arabicocr-khatt (CRNN-CTC)",
+    "secondary": null,
+    "recheck": null
+  },
+  "local_ocr": {
+    "engine": "FixFips/arabicocr-khatt (CRNN-CTC)",
+    "lines": [
+      "5و# 0ة ،",
+      "وعا قيرتي يلا ة\" التدفي قيثيا ين \" وني انو رفي \"يي قتروعيشين و ن أو لايي",
+      "ف يفيثي ثيف ي يف ييينف ي ي ي نينيق تفي ف ييي )",
+      "ي ي ي ي ي ي يفي يفي ييي ي",
+      "ي ي ي ي ي يفيف ي ي ي يونيف يفيش ي تأ ي",
+      "ق القف ةرة ي إراتير يير يقيدا في \" جبا ارقي العين ذه ت مذ\"",
+      "98820000 2033مو",
+      "####999988998 9990 0",
+      "ق####رفيف ي ي .",
+      "333388800."
+    ],
+    "elapsed_seconds": 26.52820480000082,
+    "error": null,
+    "segmentation": "tiled_line_segmentation"
   },
   "preprocessing": {
     "original_width": 1031,
@@ -25,11 +44,11 @@
     "orientation_scores": {
       "0": 2.7532,
       "90": 2.8927,
-      "180": 4.5873,
+      "180": 4.5874,
       "270": 1.5317
     },
     "deskew_angle": 0.0,
-    "blur_variance": 158.08,
+    "blur_variance": 157.96,
     "contrast_std": 45.92,
     "low_resolution_input": true
   },
@@ -54,145 +73,60 @@
   },
   "crop_route": {
     "attempted": false,
-    "selected": "full",
-    "reason": "crop OCR disabled for mixed page"
+    "selected": "tiled_line_segmentation",
+    "reason": "local heuristic segmentation followed by KHATT CRNN-CTC only"
   },
-  "detected_line_bands": 35,
+  "detected_line_bands": 10,
   "lines": [
     {
-      "text": "(وكالة دورية )",
-      "flag": "agreed",
-      "similarity": 0.9655
+      "text": "5و# 0ة ،",
+      "flag": "single_local_model",
+      "similarity": 1.0
     },
     {
-      "text": "بتاريخه وتنفيذا لعقد البيع المرغ في ١٩٧٢/٧/١٢ فاننا نحن المرقمين أدناه صبيحة",
-      "flag": "single_source_a",
-      "similarity": 0.7848
+      "text": "وعا قيرتي يلا ة\" التدفي قيثيا ين \" وني انو رفي \"يي قتروعيشين و ن أو لايي",
+      "flag": "single_local_model",
+      "similarity": 1.0
     },
     {
-      "text": "حسني الزغير وحمادة محمد محفوظ من الخليل ونحن بكامل الصفات المعتبرة شرعا وقانونا قد وكلنا ها",
-      "flag": "single_source_a",
-      "similarity": 0.8495
+      "text": "ف يفيثي ثيف ي يف ييينف ي ي ي نينيق تفي ف ييي )",
+      "flag": "single_local_model",
+      "similarity": 1.0
     },
     {
-      "text": "واقمنا مقام انفسنا وحوضا من اشخاصنا السيد مازن محمد محمود الزغير من الخليل في بيع وشراغ كامل",
-      "flag": "single_source_a",
-      "similarity": 0.6931
+      "text": "ي ي ي ي ي ي يفي يفي ييي ي",
+      "flag": "single_local_model",
+      "similarity": 1.0
     },
     {
-      "text": "قطعة الارض خاصتنا البالغة مساحتها حوالي نصف دونم من اراضي الخليل موقع بير بلك النصاري _",
-      "flag": "single_source_a",
-      "similarity": 0.7089
+      "text": "ي ي ي ي ي يفيف ي ي ي يونيف يفيش ي تأ ي",
+      "flag": "single_local_model",
+      "similarity": 1.0
     },
     {
-      "text": "وحدودها شمالا _ طك ديباب وورثة حماد عمرو جنوبا _ محمد سعدي السلايبة شرقا _ دياب عمرو",
-      "flag": "single_source_a",
-      "similarity": 0.4156
+      "text": "ق القف ةرة ي إراتير يير يقيدا في \" جبا ارقي العين ذه ت مذ\"",
+      "flag": "single_local_model",
+      "similarity": 1.0
     },
     {
-      "text": "ومحمد احمد ابو بيض القواسمي غربا _ دياب وورثة حماد عمرو مع طريق عرضها مترين تمر من طك",
-      "flag": "single_source_a",
-      "similarity": 0.288
+      "text": "98820000 2033مو",
+      "flag": "single_local_model",
+      "similarity": 1.0
     },
     {
-      "text": "محمد سعدي السلايبة ثم من طك زهري محمد ابو رجلة حتى تصل للشارع العام والتي تسمى _ الجلاء _",
-      "flag": "single_source_a",
-      "similarity": 0.5435
+      "text": "####999988998 9990 0",
+      "flag": "single_local_model",
+      "similarity": 1.0
     },
     {
-      "text": "بيعها باثنا وفرائها قطعها الى المشتري أنسيد محمد محمود الزغير من الخنيل لقاء ثمن وقدره سنة الآف",
-      "flag": "single_source_a",
-      "similarity": 0.4172
+      "text": "ق####رفيف ي ي .",
+      "flag": "single_local_model",
+      "similarity": 1.0
     },
     {
-      "text": "وخمسمائة ليرة اسرائيلية وصلنا بكامله من المشتري المذكور هذا ونقدا على وجه السلف وقد وقتنا وفوضنا",
-      "flag": "single_source_a",
-      "similarity": 0.5281
-    },
-    {
-      "text": "واذنا الوكيل الذكور بالاقرار والتقرير هنا وفي الاعتراف بصول الثمن وفي الترفيع في طي لمة ايراق",
-      "flag": "single_source_a",
-      "similarity": 0.5286
-    },
-    {
-      "text": "ومحاملات ومستندات ووثائق وفي تعهلني والظهور منا امام جميع الوزارات والدوائر الرسمية والمختصة بط _",
-      "flag": "single_source_a",
-      "similarity": 0.6704
-    },
-    {
-      "text": "في ذلك دوائر الاراضي والتسوية والمالوقوالبلدية وايه جهة اخرى وكذلك للظهور منا اذا اقتضى الامر",
-      "flag": "single_source_a",
-      "similarity": 0.5674
-    },
-    {
-      "text": "امام جميع المحاكم شرعية ونظامية صلحا ومركزية ومدنية واستئنافا واستئناف طيها وتعميزا وعدل طيها وايه",
-      "flag": "single_source_a",
-      "similarity": 0.5143
-    },
-    {
-      "text": "محكمة اخرى وذلك في جميع انواع القضايا بط في ذلك قضايا القسة والاقراز وازالة الشيوع والشفعة",
-      "flag": "single_source_a",
-      "similarity": 0.6788
-    },
-    {
-      "text": "والاطهة والمهاماة وايه قضية اونزاع اخر وفي التبلغ والتبليغ والدفاعة والمرافعة لاخر درجة من درجات",
-      "flag": "single_source_a",
-      "similarity": 0.4375
-    },
-    {
-      "text": "المحاكمة وفي تقديم البينة وحصرها والحجز فيها وفي تحليف اليمين وفي المصالحة وترتيبها وفي التحكيم",
-      "flag": "single_source_a",
-      "similarity": 0.75
-    },
-    {
-      "text": "وقبول او رفض قرار المحكمين وفي تنفيذ اي حكم يصدر لصالحنا لدى دائرة الاجراء او اية دائرة تقوم",
-      "flag": "agreed",
-      "similarity": 0.9271
-    },
-    {
-      "text": "قامها وفي جميع المعاملات الاجرائية والتنفيذية وفي طلب الحجزين التحفظي والاجرائي وفكها او تثبيتها",
-      "flag": "single_source_a",
-      "similarity": 0.0
-    },
-    {
-      "text": "[[UNRESOLVED | A: وفي طلب الحبس واسترداده وفي القيام باي عمل او محافظة او اجراء لدى اية جهة كانت والحاصل فاننا | B: وفي جميع المعاملات الاجرائية والتنفيذية وفي طلب الحبس والاسترداد وفي القيام بأي عمل او معاملة لدى اية جهة كانت والحاصل فاننا]]",
-      "flag": "unresolved",
-      "similarity": 0.7222
-    },
-    {
-      "text": "قد وكلنا الوكيل المذكور في كل ما يجوز به التوكيل شرعا وقانونا ذكر في هذه الوكالةقام لم يذكر وكالة",
-      "flag": "single_source_a",
-      "similarity": 0.8832
-    },
-    {
-      "text": "دورية خاصة ومحصرة بالبيع الموصوف فيها تقدم يتعلق فيها حق النبر وهو حق المشتري المذكور ليس",
-      "flag": "single_source_a",
-      "similarity": 0.6154
-    },
-    {
-      "text": "لنا او لخبرنا حق عزل الوكيل وكلما عزل يبقى وكيلا الى ان يتم تنفيذ ضمن هذه الوكالة تنفيذا كاملا",
-      "flag": "single_source_a",
-      "similarity": 0.0
-    },
-    {
-      "text": "والى ان يتم تسجيل المبيع المذكور باسم المشتري المذكور رسميا وقانونيا وان للوكيل المذكور الحق في",
-      "flag": "single_source_a",
-      "similarity": 0.9119
-    },
-    {
-      "text": "توكيل الغير في كل او بعض ما ذكر طالبين عن حضرة الكاتب العدل المحترم بالقدس التصديق",
-      "flag": "single_source_a",
-      "similarity": 0.8862
-    },
-    {
-      "text": "[[UNRESOLVED | A: طي هذه الوكالة حسب الاصول _ تحريرا في هذا اليوم ١٩٧٩/٥/١٦ . | B: في هذه الوكالة حسب الاصول -- تحريرا في هذا اليوم 16/5/1973]]",
-      "flag": "unresolved",
-      "similarity": 0.8205
-    },
-    {
-      "text": "توقيع الوكالة        توقيع الوكالة",
-      "flag": "single_source_a",
-      "similarity": 0.0
+      "text": "333388800.",
+      "flag": "single_local_model",
+      "similarity": 1.0
     }
   ]
 }

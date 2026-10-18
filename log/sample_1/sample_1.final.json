@@ -6,7 +6,7 @@
   },
   "model_profile": "lite",
   "document_type": "handwritten",
-  "classification_confidence": 0.97,
+  "classification_confidence": 0.95,
   "models": {
     "primary": "anthropic/claude-haiku-5.5",
     "secondary": "openai/gpt-6-luna",
@@ -23,13 +23,13 @@
     "orientation_applied": 0,
     "orientation_confidence": 0.0505,
     "orientation_scores": {
-      "0": 6.5665,
+      "0": 6.5685,
       "90": -10.0,
-      "180": 6.4907,
+      "180": 6.4927,
       "270": -10.0
     },
     "deskew_angle": 0.0,
-    "blur_variance": 116.91,
+    "blur_variance": 116.83,
     "contrast_std": 33.28,
     "low_resolution_input": true
   },
@@ -48,7 +48,7 @@
         "y0": 0,
         "x1": 2000,
         "y1": 3135,
-        "ink_fraction": 0.098
+        "ink_fraction": 0.0979
       }
     ]
   },
@@ -57,147 +57,147 @@
     "selected": "full",
     "reason": "crop OCR disabled for handwritten page"
   },
-  "detected_line_bands": 32,
+  "detected_line_bands": 31,
   "lines": [
     {
-      "text": "[[UNRESOLVED | A: ٦٥٠٠ ليرة اسرائيل | B: ٦٥٠- النظام البرلماني]]",
-      "flag": "unresolved",
-      "similarity": 0.4211
-    },
-    {
-      "text": "عقد اتفاقية بيع نصف ارض",
-      "flag": "single_source_a",
-      "similarity": 0.2727
-    },
-    {
-      "text": "[غير واضح] [غير واضح] [غير واضح] [غير واضح] [غير واضح]",
+      "text": "[غير واضح]",
       "flag": "single_source_b",
       "similarity": 0.0
     },
     {
-      "text": "ستة الاف وخمسمئة ليرة اسرائيل لارض",
+      "text": "٦٥٠٠ ليرة اسرائيل",
       "flag": "single_source_a",
-      "similarity": 0.3377
+      "similarity": 0.2963
     },
     {
-      "text": "الفريق الاول: محمد محمود سليمان الرمح من الخليل محلة الشيخ",
+      "text": "عقد انتقاله بيع قطعة ارض",
       "flag": "single_source_a",
-      "similarity": 0.2268
+      "similarity": 0.1765
     },
     {
-      "text": "[[UNRESOLVED | A: الفريق الثاني: صبحيه حسن سعيد الزبير وولدها حماده محمد محمود [غير واضح] من قبل محمد الشيخ | B: [غير واضح] [غير واضح] [غير واضح] [غير واضح]]]",
-      "flag": "unresolved",
-      "similarity": 0.3182
-    },
-    {
-      "text": "[[UNRESOLVED | A: [غير واضح] المزيدين [غير واضح] مايلي | B: [غير واضح] [غير واضح] [غير واضح]]]",
-      "flag": "unresolved",
-      "similarity": 0.6765
-    },
-    {
-      "text": "[[UNRESOLVED | A: ١- يدفع المزيد الاول للمزيد الثاني مبلغ ستة الاف وخمسمئة ليرة اسرائيل لاعتبار ذلك وذلك ثمناً لمقلم الدفن الذي عليه المزيد الثاني وباخرج للمزيد الاول من النفاء [غير واضح] سند سرد [غير واضح] | B: [غير واضح] [غير واضح] [غير واضح]]]",
-      "flag": "unresolved",
-      "similarity": 0.2364
-    },
-    {
-      "text": "٢- سلم المزيد الثاني للمزيد الاول فلسم الارض التي يملكها دون نقاع و الذي باعها للمزيد الاول وآلت ملكيته اليه ودفع سبلغ ساحته حواني نصف دونم والواقعه في منطقة سرد سلمه الشاري والتي تحدها من شمال و الغرب ملك دباب محمود و محمد احمد ابو بيض الشواكه",
-      "flag": "single_source_a",
-      "similarity": 0.1622
-    },
-    {
-      "text": "[[UNRESOLVED | A: ٣- يجب دفع هذا السند بصح المزيد الاول مالح شرعا للاحكام شيء [غير واضح] وبدون مماطلة | B: [غير واضح] [غير واضح] [غير واضح] [غير واضح]]]",
-      "flag": "unresolved",
-      "similarity": 0.2857
-    },
-    {
-      "text": "[[UNRESOLVED | A: ٤- على المزيد الثاني ان يتاتا [غير واضح] للمزيد الاول عن ملكية الاراضي دواعي الطابو إذا اخذ المزيد الاول منه ذلك | B: [غير واضح] [غير واضح] [غير واضح] [غير واضح]]]",
-      "flag": "unresolved",
-      "similarity": 0.2968
-    },
-    {
-      "text": "٥- يدفع المزيد الاول جميع الصادرات المتعلقة بتغيير ملكية الارض من اسم المزيد الثاني الى المزيد الاول",
-      "flag": "single_source_a",
-      "similarity": 0.25
-    },
-    {
-      "text": "[غير واضح] [غير واضح] [غير واضح] [غير واضح]",
+      "text": "[غير واضح]",
       "flag": "single_source_b",
       "similarity": 0.0
     },
     {
-      "text": "[غير واضح] [غير واضح] [غير واضح] [غير واضح]",
+      "text": "[غير واضح]",
       "flag": "single_source_b",
       "similarity": 0.0
     },
     {
-      "text": "[غير واضح] [غير واضح] [غير واضح] [غير واضح]",
-      "flag": "single_source_b",
-      "similarity": 0.0
-    },
-    {
-      "text": "[غير واضح] [غير واضح] [غير واضح] [غير واضح]",
-      "flag": "single_source_b",
-      "similarity": 0.0
-    },
-    {
-      "text": "[غير واضح] [غير واضح] [غير واضح] [غير واضح]",
-      "flag": "single_source_b",
-      "similarity": 0.0
-    },
-    {
-      "text": "[غير واضح] [غير واضح] [غير واضح] [غير واضح]",
-      "flag": "single_source_b",
-      "similarity": 0.0
-    },
-    {
-      "text": "٦- يدفع كل فريق من المزيدين مبلغ عشرة آلاف ليرة اسرائيل غرامة للفريق الآخر إذا اخل بما ورد في هذا العقد",
+      "text": "نقداً وقدره ستة آلاف وخمسمائة ليرة اسرائيل لاغير",
       "flag": "single_source_a",
-      "similarity": 0.2055
+      "similarity": 0.1034
     },
     {
-      "text": "٧- لهذه الارض طريق مرضية متران عرض من ملك محمد سعدي السديه ثم من ملك ضرار محمد ابو ارسبيه حتى تصل الى شارع الحام و هو الذي يسمى (الجلاد)",
+      "text": "الفريق الأول : حسني محمود سليمان الرعد من الجليل محلة الشعب",
       "flag": "single_source_a",
-      "similarity": 0.1341
+      "similarity": 0.0
     },
     {
-      "text": "جرى تحرير هذا العقد في اليوم الثاني عشر من شهر تموز ١٩٧٠م",
-      "flag": "single_source_a",
-      "similarity": 0.26
+      "text": "الفريق الثاني : صبحية حسن سعيد الزعبي وولدها حماده محمد محمود [غير واضح] من محلة الشعب",
+      "flag": "corrected",
+      "similarity": 0.2083
     },
     {
-      "text": "اسم شهود عدول و اشهد عليه شهود",
-      "flag": "single_source_a",
-      "similarity": 0.2192
-    },
-    {
-      "text": "[[UNRESOLVED | A: شاهد ... [غير واضح] | B: [غير واضح] [غير واضح] [غير واضح] [غير واضح]]]",
+      "text": "[[UNRESOLVED | A: [غير واضح] المزيتان [غير واضح] ما يلي : | B: [غير واضح]]]",
       "flag": "unresolved",
-      "similarity": 0.3871
+      "similarity": 0.4082
+    },
+    {
+      "text": "[غير واضح]",
+      "flag": "single_source_b",
+      "similarity": 0.0
+    },
+    {
+      "text": "١- يدفع الفريق الأول للفريق الثاني مبلغ ستة آلاف وخمسمائة ليرة اسرائيل",
+      "flag": "single_source_a",
+      "similarity": 0.1928
+    },
+    {
+      "text": "[[UNRESOLVED | A: لا يعتبر ذلك ثمناً لتملك الأرض التي عليها الفريق الثاني وباقي الفريق الأول في منطقة سرور [غير واضح] الصفاري من أراضي الحمص | B: [غير واضح]]]",
+      "flag": "unresolved",
+      "similarity": 0.1515
+    },
+    {
+      "text": "٢- سلم الفريق الثاني للفريق الأول قطعة الأرض التي يملكها دون نقاش و الني ينفع للفريق الأول وآلت ملكيتها إليه ودينه يبلغ ساعتها موالي",
+      "flag": "single_source_a",
+      "similarity": 0.0
+    },
+    {
+      "text": "[[UNRESOLVED | A: الصفاري والتي تحدها من شمال والغرب ملك دباب محمد وسبعه وحدود [غير واضح] الجنوب على محمد سعيد السديه وسعيد الزعبي ملك دباب عمر ومحمد أحمد أبو بكر القواكه | B: [غير واضح]]]",
+      "flag": "unresolved",
+      "similarity": 0.1235
+    },
+    {
+      "text": "٣- بموجب هذا العقد يصبح الفريق الأول مالكاً شرعياً للأرض ويحق له التصرف بها كيفما يشاء",
+      "flag": "single_source_a",
+      "similarity": 0.1042
+    },
+    {
+      "text": "٤- على الفريق الثاني أن يتنازل للفريق الأول عن ملكيته للأرض دون أي دوائر الطابو إذا طلب الفريق الأول منه ذلك",
+      "flag": "single_source_a",
+      "similarity": 0.0
+    },
+    {
+      "text": "٥- يدفع الفريق الأول جميع الضرائب والمستحقات على الأرض منذ تاريخ العقد",
+      "flag": "single_source_a",
+      "similarity": 0.1928
+    },
+    {
+      "text": "[غير واضح]",
+      "flag": "single_source_b",
+      "similarity": 0.0
+    },
+    {
+      "text": "[غير واضح]",
+      "flag": "single_source_b",
+      "similarity": 0.0
+    },
+    {
+      "text": "[غير واضح]",
+      "flag": "single_source_b",
+      "similarity": 0.0
+    },
+    {
+      "text": "٦- يدفع كل فريق من الطرفين مبلغ خمسة آلاف ليرة اسرائيل للفريق الآخر إذا أخل بما ورد في هذا العقد",
+      "flag": "single_source_a",
+      "similarity": 0.1468
+    },
+    {
+      "text": "٧- لهذه الأرض حدود ومنافذ تبدأ من ملك محمد سعيدي السديه ثم مدخل مزرعة محمد أبو ارسنيه حتى تصل إلى شارع الحاكم وهو الذي يسمى (الجلاد)",
+      "flag": "single_source_a",
+      "similarity": 0.0
+    },
+    {
+      "text": "جرى تحرير هذا العقد في اليوم الثاني عشر من شهر تموز ١٩٧٠م.",
+      "flag": "single_source_a",
+      "similarity": 0.1408
+    },
+    {
+      "text": "امام شهود عدول وهم هذه الشهادة",
+      "flag": "single_source_a",
+      "similarity": 0.186
+    },
+    {
+      "text": "[[UNRESOLVED | A: شاهد [غير واضح] | B: [غير واضح]]]",
+      "flag": "unresolved",
+      "similarity": 0.8
+    },
+    {
+      "text": "شاهد حماده",
+      "flag": "single_source_a",
+      "similarity": 0.1739
     },
     {
       "text": "شاهد",
-      "flag": "single_source_b",
-      "similarity": 0.0
-    },
-    {
-      "text": "[[UNRESOLVED | A: شاهد ابو حماد ... [غير واضح] | B: شاهد [غير واضح]]]",
-      "flag": "unresolved",
-      "similarity": 0.6977
-    },
-    {
-      "text": "[[UNRESOLVED | A: شاهد محمد سعيد [غير واضح] | B: شاهد [غير واضح]]]",
-      "flag": "unresolved",
-      "similarity": 0.75
-    },
-    {
-      "text": "[[UNRESOLVED | A: شاهد [غير واضح] زهير [غير واضح] | B: [غير واضح]]]",
-      "flag": "unresolved",
-      "similarity": 0.4878
-    },
-    {
-      "text": "توقيع او بصمه صبحيه حسن سعيد الزبير",
       "flag": "single_source_a",
-      "similarity": 0.0
+      "similarity": 0.1429
+    },
+    {
+      "text": "[[UNRESOLVED | A: توقيع [غير واضح] شاهد | B: ٧- [غير واضح]]]",
+      "flag": "unresolved",
+      "similarity": 0.6471
     },
     {
       "text": "توقيع حماده محمد محمود",
@@ -205,9 +205,29 @@
       "similarity": 0.0
     },
     {
-      "text": "[[UNRESOLVED | A: صبحيه [غير واضح] شاهد [غير واضح] | B: [غير واضح] [غير واضح]]]",
+      "text": "توقيع",
+      "flag": "single_source_a",
+      "similarity": 0.1333
+    },
+    {
+      "text": "[[UNRESOLVED | A: شهادة [غير واضح] الشهود [غير واضح] | B: شاهد [غير واضح] شاهد [غير واضح] شاهد [غير واضح]]]",
       "flag": "unresolved",
-      "similarity": 0.4528
+      "similarity": 0.716
+    },
+    {
+      "text": "[غير واضح]",
+      "flag": "single_source_b",
+      "similarity": 0.0
+    },
+    {
+      "text": "[غير واضح]",
+      "flag": "single_source_b",
+      "similarity": 0.0
+    },
+    {
+      "text": "[غير واضح]",
+      "flag": "single_source_b",
+      "similarity": 0.0
     }
   ]
 }

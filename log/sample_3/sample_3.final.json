@@ -4,13 +4,29 @@
     "size": 65013,
     "mtime_ns": 1792206476396439400
   },
-  "model_profile": "lite",
-  "document_type": "mixed",
-  "classification_confidence": 0.65,
+  "model_profile": "free",
+  "document_type": "unclassified",
+  "classification_confidence": null,
+  "model_domain": "Arabic handwriting (KHATT)",
   "models": {
-    "primary": "anthropic/claude-haiku-5.5",
-    "secondary": "openai/gpt-6-luna",
-    "recheck": "anthropic/claude-haiku-5.5"
+    "primary": "FixFips/arabicocr-khatt (CRNN-CTC)",
+    "secondary": null,
+    "recheck": null
+  },
+  "local_ocr": {
+    "engine": "FixFips/arabicocr-khatt (CRNN-CTC)",
+    "lines": [
+      "#####",
+      "شر النه الفو تسدينن العمنائ\" من العن الأسم .",
+      "# الا # .",
+      "وظ ث ي قييشي يشي يتي ييينية",
+      "لثاخي الجمدة الن ايهن \"اتقاجة التوق، و للسرا عن اليي .",
+      "وفنلها # فافق الاحترار #",
+      "ف05 99988"
+    ],
+    "elapsed_seconds": 6.219744100002572,
+    "error": null,
+    "segmentation": "tiled_line_segmentation"
   },
   "preprocessing": {
     "original_width": 550,
@@ -29,7 +45,7 @@
       "270": 2.7027
     },
     "deskew_angle": -1.0134,
-    "blur_variance": 98.82,
+    "blur_variance": 98.73,
     "contrast_std": 36.51,
     "low_resolution_input": true
   },
@@ -54,79 +70,44 @@
   },
   "crop_route": {
     "attempted": false,
-    "selected": "full",
-    "reason": "crop OCR disabled for mixed page"
+    "selected": "tiled_line_segmentation",
+    "reason": "local heuristic segmentation followed by KHATT CRNN-CTC only"
   },
-  "detected_line_bands": 19,
+  "detected_line_bands": 7,
   "lines": [
     {
-      "text": "١١",
-      "flag": "single_source_b",
-      "similarity": 0.0
-    },
-    {
-      "text": "السيد الدكتور محمد عبدالقادر حاتم",
-      "flag": "agreed",
-      "similarity": 0.9851
-    },
-    {
-      "text": "نائب رئيس مجلس الوزراء ووزير الثقافة والاعلام",
-      "flag": "agreed",
-      "similarity": 0.9778
-    },
-    {
-      "text": "تحية طيبة وبعد ،",
-      "flag": "agreed",
-      "similarity": 0.9677
-    },
-    {
-      "text": "أتشرف بأن أرسل الى سيادتكم مع هذا النسخة المعتمدة للنشر",
-      "flag": "agreed",
-      "similarity": 0.9444
-    },
-    {
-      "text": "من قرار رئيس جمهورية مصر العربية رقم ٥٤٩ لسنة ١٩٧٢ باعتبار",
-      "flag": "agreed",
-      "similarity": 0.9828
-    },
-    {
-      "text": "اقامة متحف أمير الشعراء أحمد شوقى بكامل أرض وبناء العقار رقم",
-      "flag": "agreed",
-      "similarity": 0.8739
-    },
-    {
-      "text": "٦ شارع أحمد شوقى بمحافظة الجيزة من أعمال المنفعة العامة ،",
-      "flag": "agreed",
-      "similarity": 0.9381
-    },
-    {
-      "text": "رجاء التفضل بالتنبيه بندب من يلزم للاشراف على النشر",
-      "flag": "agreed",
-      "similarity": 0.9804
-    },
-    {
-      "text": "بالجريدة الرسمية بعد مراجعة المرفقات ،",
-      "flag": "agreed",
-      "similarity": 0.96
-    },
-    {
-      "text": "وتفضلوا بقبول فائق الاحترام ٥٥٥",
-      "flag": "agreed",
-      "similarity": 0.931
-    },
-    {
-      "text": "أمين عام مجلس الوزراء",
-      "flag": "agreed",
+      "text": "#####",
+      "flag": "single_local_model",
       "similarity": 1.0
     },
     {
-      "text": "( محمد يسرى قنصوه )",
-      "flag": "single_source_a",
-      "similarity": 0.5854
+      "text": "شر النه الفو تسدينن العمنائ\" من العن الأسم .",
+      "flag": "single_local_model",
+      "similarity": 1.0
     },
     {
-      "text": "في ٢٤ مايو ١٩٧٢",
-      "flag": "agreed",
+      "text": "# الا # .",
+      "flag": "single_local_model",
+      "similarity": 1.0
+    },
+    {
+      "text": "وظ ث ي قييشي يشي يتي ييينية",
+      "flag": "single_local_model",
+      "similarity": 1.0
+    },
+    {
+      "text": "لثاخي الجمدة الن ايهن \"اتقاجة التوق، و للسرا عن اليي .",
+      "flag": "single_local_model",
+      "similarity": 1.0
+    },
+    {
+      "text": "وفنلها # فافق الاحترار #",
+      "flag": "single_local_model",
+      "similarity": 1.0
+    },
+    {
+      "text": "ف05 99988",
+      "flag": "single_local_model",
       "similarity": 1.0
     }
   ]

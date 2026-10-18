@@ -13,6 +13,7 @@ input/*
 !input/sample_2.jpg
 !input/sample_3.jpg
 !input/sample_4.jpg
+!input/sample_1_reference.txt
 
 log/*
 !log/sample_1/

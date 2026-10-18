@@ -118,6 +118,12 @@ def parse_lines(reply: str) -> list[str]:
 def normalize_for_metric(text: str) -> str:
     """Normalize presentation differences without changing Arabic letters."""
     text = unicodedata.normalize("NFKC", text).replace("\u0640", "")
+    # Uncertainty placeholders are metadata, not words. The reference file
+    # itself omits disputed transcriptions; candidate placeholders are removed
+    # while the certain text on the same line remains scoreable.
+    text = re.sub(r"\[\s*(?:؟|غير\s+واضح)\s*\]", " ", text)
+    text = re.sub(r"\(\s*توقيع\s+غير\s+مقروء\s*\)", " ", text)
+    text = text.replace("...", " ")
     text = re.sub(r"[\u064B-\u065F\u0670]", "", text)
     text = re.sub(r"[^\w\u0600-\u06FF]+", " ", text, flags=re.UNICODE)
     return re.sub(r"\s+", " ", text).strip()

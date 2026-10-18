@@ -45,28 +45,19 @@ OUTPUT_DIR = PROJECT_DIR / "output"
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
 URL = "https://openrouter.ai/api/v1/chat/completions"
-FREE_VISION_PRIMARY = "nvidia/nemotron-3.5-super-vl:free"
-FREE_VISION_SECONDARY = "thinkingmachines/inkling:free"
-FREE_VISION_FALLBACKS = (
-    FREE_VISION_PRIMARY,
-    FREE_VISION_SECONDARY,
-    "google/gemma-4-31b-it:free",
-    "google/gemma-4-26b-a4b-it:free",
-    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
-    "openrouter/free",
-)
+FREE_LOCAL_MODEL = "FixFips/arabicocr-khatt"
 MODEL_PROFILES = {
     "free": {
-        "classifier": FREE_VISION_SECONDARY,
-        "printed": FREE_VISION_PRIMARY,
-        "handwritten": FREE_VISION_PRIMARY,
-        "secondary": FREE_VISION_SECONDARY,
-        "recheck": FREE_VISION_PRIMARY,
-        "crop": FREE_VISION_PRIMARY,
-        "crop_judge": FREE_VISION_SECONDARY,
-        "mark_blind": FREE_VISION_PRIMARY,
-        "mark_forensic": FREE_VISION_SECONDARY,
-        "mark_judge": FREE_VISION_PRIMARY,
+        "classifier": FREE_LOCAL_MODEL,
+        "printed": FREE_LOCAL_MODEL,
+        "handwritten": FREE_LOCAL_MODEL,
+        "secondary": FREE_LOCAL_MODEL,
+        "recheck": FREE_LOCAL_MODEL,
+        "crop": FREE_LOCAL_MODEL,
+        "crop_judge": FREE_LOCAL_MODEL,
+        "mark_blind": FREE_LOCAL_MODEL,
+        "mark_forensic": FREE_LOCAL_MODEL,
+        "mark_judge": FREE_LOCAL_MODEL,
     },
     "lite": {
         "classifier": "anthropic/claude-haiku-5.5",
@@ -115,7 +106,6 @@ IGNORE_DIACRITICS = False
 UNCLEAR_RE = re.compile(r"[\[\(\{]\s*غير\s+واضح\s*[\]\)\}]")
 USAGE = {"prompt_tokens": 0, "completion_tokens": 0, "calls": 0}
 MODEL_USAGE: dict[str, dict] = {}
-FREE_MODEL_COOLDOWN_UNTIL: dict[str, float] = {}
 
 
 class OpenRouterResponseError(RuntimeError):
@@ -254,47 +244,6 @@ def to_data_url(img: Image.Image, fmt: str = "PNG") -> str:
     return f"data:image/{fmt.lower()};base64,{encoded}"
 
 
-def _free_model_candidates(model: str) -> list[str]:
-    """Prefer a deterministic free vision model, then fail over safely."""
-    if ACTIVE_MODEL_PROFILE != "free":
-        return [model]
-    ordered = list(dict.fromkeys((model, *FREE_VISION_FALLBACKS)))
-    now = time.monotonic()
-    available = [
-        candidate
-        for candidate in ordered
-        if FREE_MODEL_COOLDOWN_UNTIL.get(candidate, 0.0) <= now
-    ]
-    # The generic router remains a last-resort escape hatch even when every
-    # explicit endpoint is cooling down.
-    return available or ["openrouter/free"]
-
-
-def _cool_down_free_model(model: str, exc: Exception) -> int:
-    """Temporarily skip an unhealthy free endpoint for later pipeline calls."""
-    status = None
-    if isinstance(exc, requests.HTTPError) and exc.response is not None:
-        status = exc.response.status_code
-    elif isinstance(exc, OpenRouterResponseError):
-        try:
-            status = int(exc.status_code)
-        except (TypeError, ValueError):
-            status = None
-    if status == 429:
-        seconds = 15 * 60
-    elif status is not None and status >= 500:
-        seconds = 2 * 60
-    elif isinstance(exc, (requests.Timeout, requests.ConnectionError)):
-        seconds = 2 * 60
-    elif isinstance(exc, (ValueError, json.JSONDecodeError)):
-        seconds = 60
-    else:
-        seconds = 0
-    if seconds:
-        FREE_MODEL_COOLDOWN_UNTIL[model] = time.monotonic() + seconds
-    return seconds
-
-
 def _message_text(message: dict) -> str:
     """Normalize OpenRouter string or content-block replies and reject blanks."""
     content = message.get("content")
@@ -315,6 +264,10 @@ def _message_text(message: dict) -> str:
 
 def chat(model: str, text: str, images: list[Image.Image], retries: int = 3) -> str:
     """Make one OpenRouter chat-completions call with retry accounting."""
+    if ACTIVE_MODEL_PROFILE == "free":
+        raise RuntimeError(
+            "The --free OCR profile is local-only and does not permit OpenRouter calls"
+        )
     if not API_KEY:
         raise RuntimeError("OPENROUTER_API_KEY is not set")
     content = [{"type": "text", "text": text}]
@@ -324,24 +277,14 @@ def chat(model: str, text: str, images: list[Image.Image], retries: int = 3) -> 
     )
     headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
     last_error = None
-    candidates = _free_model_candidates(model)
-    attempts = candidates if ACTIVE_MODEL_PROFILE == "free" else [model] * retries
+    attempts = [model] * retries
     for attempt, candidate in enumerate(attempts):
         payload = {
             "model": candidate,
             "messages": [{"role": "user", "content": content}],
         }
-        if ACTIVE_MODEL_PROFILE == "free":
-            # Several free vision endpoints enable long reasoning by default.
-            # OCR needs the final transcription, not a large hidden reasoning pass.
-            payload.update({
-                "reasoning": {"enabled": False},
-                "temperature": 0,
-                "max_tokens": 8192,
-            })
         try:
-            timeout = (15, 45) if ACTIVE_MODEL_PROFILE == "free" else 120
-            response = requests.post(URL, headers=headers, json=payload, timeout=timeout)
+            response = requests.post(URL, headers=headers, json=payload, timeout=120)
             response.raise_for_status()
             data = response.json()
             if "error" in data:
@@ -352,20 +295,15 @@ def chat(model: str, text: str, images: list[Image.Image], retries: int = 3) -> 
             USAGE["calls"] += 1
             calculate_cost.record_usage(MODEL_USAGE, candidate, usage)
             answer = _message_text(data["choices"][0]["message"])
-            # Every OCR/evaluation prompt in this module requires JSON. Validate
-            # here so free endpoints that emit truncated prose trigger failover.
+            # Every OpenRouter OCR/evaluation prompt in this module requires
+            # JSON, so truncated prose must trigger the normal retry path.
             parse_json(answer)
-            if candidate != model:
-                print(f"Free-model fallback: {model} -> {candidate}", file=sys.stderr)
             return answer
         except Exception as exc:
             last_error = RuntimeError(f"{candidate}: {exc}")
-            cooldown = _cool_down_free_model(candidate, exc)
             if attempt + 1 < len(attempts):
-                cooldown_note = f"; cooldown {cooldown}s" if cooldown else ""
                 print(
-                    f"Free model {candidate} failed ({exc}){cooldown_note}; trying "
-                    f"{attempts[attempt + 1]}",
+                    f"Model {candidate} failed ({exc}); retrying",
                     file=sys.stderr,
                 )
                 time.sleep(2 ** attempt)
@@ -728,6 +666,66 @@ def process(
 
     paragraph_boxes, layout_quality = preprocess.detect_arabic_paragraphs(prepared)
 
+    if ACTIVE_MODEL_PROFILE == "free":
+        import local_ocr
+
+        # ArabicOCR_KHATT includes preprocessing calibrated for KHATT. Feeding
+        # it our binarized preview can erase strokes, so recognize the raw page.
+        local_result = local_ocr.recognize(raw_img)
+        if local_result.error or not local_result.lines:
+            raise RuntimeError(
+                f"{local_ocr.MODEL_NAME} failed: "
+                f"{local_result.error or 'no text returned'}"
+            )
+        final = [
+            {"text": line, "flag": "single_local_model", "similarity": 1.0}
+            for line in local_result.lines
+        ]
+        (log_dir / f"{artifact_name}_modelA.txt").write_text(
+            "\n".join(local_result.lines), encoding="utf-8"
+        )
+        # Prevent artifacts from an older dual/evolutionary run looking current.
+        for stale_suffix in ("_modelB.txt", "_draft.txt", "_retry.txt", ".mark.json"):
+            (log_dir / f"{artifact_name}{stale_suffix}").unlink(missing_ok=True)
+        output_path.write_text(
+            "\n".join(item["text"] for item in final), encoding="utf-8"
+        )
+        report = {
+            "input": str(image_path),
+            "source_signature": source_signature(image_path),
+            "model_profile": ACTIVE_MODEL_PROFILE,
+            "document_type": "unclassified",
+            "classification_confidence": None,
+            "model_domain": "Arabic handwriting (KHATT)",
+            "models": {
+                "primary": local_ocr.MODEL_NAME,
+                "secondary": None,
+                "recheck": None,
+            },
+            "local_ocr": local_result.as_dict(),
+            "preprocessing": prepared.metadata,
+            "preprocessed_image": str(preprocessed_path),
+            "paragraph_detection": {
+                "quality": layout_quality.as_dict(),
+                "boxes": [box.as_dict() for box in paragraph_boxes],
+            },
+            "crop_route": {
+                "attempted": False,
+                "selected": local_result.segmentation,
+                "reason": "local heuristic segmentation followed by KHATT CRNN-CTC only",
+            },
+            "detected_line_bands": len(local_result.lines),
+            "lines": final,
+        }
+        (log_dir / f"{artifact_name}.final.json").write_text(
+            json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        print(
+            f"{path}: classification=skipped; primary={local_ocr.MODEL_NAME}; "
+            f"{len(final)} lines; {local_result.elapsed_seconds:.2f}s"
+        )
+        return output_path
+
     classification = classify_document(img)
     primary_model = select_primary_model(classification["type"])
     print(
@@ -797,7 +795,11 @@ def process(
         "model_profile": ACTIVE_MODEL_PROFILE,
         "document_type": classification["type"],
         "classification_confidence": classification["confidence"],
-        "models": {"primary": primary_model, "secondary": MODEL_SECONDARY, "recheck": MODEL_RECHECK},
+        "models": {
+            "primary": primary_model,
+            "secondary": MODEL_SECONDARY,
+            "recheck": MODEL_RECHECK,
+        },
         "preprocessing": prepared.metadata,
         "preprocessed_image": str(preprocessed_path),
         "paragraph_detection": {
@@ -1013,6 +1015,12 @@ def process_input(
 ) -> Path:
     """Dispatch a regular image or a supported document through the pipeline."""
     input_path = resolve_input_path(path)
+    if ACTIVE_MODEL_PROFILE == "free" and use_evolution:
+        print(
+            f"{input_path}: evolutionary retry disabled for --free "
+            "(single local CRNN-CTC model)"
+        )
+        use_evolution = False
     extension = input_path.suffix.lower()
     if extension not in convert.SUPPORTED_EXTENSIONS:
         supported = ", ".join(sorted(convert.SUPPORTED_EXTENSIONS))

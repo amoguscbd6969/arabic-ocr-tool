@@ -1,5 +1,5 @@
 {
-  "image": "D:\\projects\\arabic-ocr\\log\\sample_1\\sample_1_preprocessed.png",
+  "image": "D:\\projects\\arabic-ocr\\input\\sample_1.jpg",
   "candidate": "D:\\projects\\arabic-ocr\\output\\sample_1\\final.txt",
   "models": {
     "blind": "anthropic/claude-haiku-5.5",
@@ -7,61 +7,70 @@
     "judge": "anthropic/claude-haiku-5.5"
   },
   "model_profile": "lite",
-  "current_score_10": 4.0,
-  "current_estimated_wer": 0.45,
-  "final_score_10": 6.0,
-  "final_estimated_wer": 0.25,
+  "current_score_10": 5.5,
+  "current_estimated_wer": 0.25,
+  "final_score_10": 6.5,
+  "final_estimated_wer": 0.15,
   "estimated_wer_warning": "Model estimate only; use --reference for exact WER.",
-  "rationale": "Candidate A has the correct structure and most clause wording, but it contains many unresolved placeholders and corrupted fragments. Candidate B misreads several names and clause amounts, and Candidate C is cleaner in the clauses but still has gaps. The final lines take the readable clause wording from A and C, keep the amounts and names that the image supports, and mark the damaged witness and boundary spans as unclear. The title amount, party names, and the 6,500 / 6,000 figures are the most reliable. The date and the clause 6 amount remain uncertain.",
+  "rationale": "Candidate A preserves the header amount, the party names (حسني محمود سليمان الرعد، صبيحة حسن سعيد الزعبي، حماده محمد محفوظ), and the 1970 date, which are consistent with the visible page. Candidate B's 1960 date and its 'الزعيد/الحلنى/الشيخ' name readings do not match the visible handwriting, so they were rejected. Candidate C is close to A but splits lines awkwardly. The final lines follow A's readings where the image supports them, keep the 'فقط' opening from B, and mark the dense middle clauses and the bottom witness line as unclear. Several boundary and place-name spans remain uncertain at this resolution.",
   "issues": [
-    "Title amount: the top reads ٦٥٠٠ ليرة اسرائيل; the sale price in the body reads ستة آلاف وخمسمئة, so the two figures should be checked against each other.",
-    "The surname in the first party line (الرمح vs الزعبر) is unclear in the image.",
-    "The year of the date (١٩٧٠ vs ١٩٧٢) is not certain; the final reading is ١٩٧٠م, which should be verified digit by digit.",
-    "Clause 6 amount: عشرة آلاف is the reading used, but ثلاثة آلاف is possible.",
-    "Clause 2 boundary descriptions (منطقة/منفعة سرب سعيد الشاعري, Shawakeh/Abu Bayd) and clause 3–4 phrasing are handwritten and only partly legible.",
-    "Witness signature lines and the bottom handwritten note are partially illegible; names beyond the clearly printed ones are uncertain."
+    "The place name in clause 1 (سرور / سلد / الصفاري) and the boundary description in clause 2 are only partly legible and may be misread.",
+    "The year ١٩٧٠ should be checked against the handwritten digits; ١٩٦٠ from Candidate B was not supported.",
+    "The witness heading and the bottom-left witness line (شهد الله هذه / شهادة صبيحة) are not clearly legible.",
+    "Signature names are partly illegible and were transcribed from the most consistent OCR readings.",
+    "The title 'عقد انتقال بيع قطعة أرض' (A/C) versus 'عقد اتفاقية بيع' (B) is uncertain; the lines below use the form most consistent with the image."
   ],
   "candidate_disagreement": {
-    "current_vs_blind_wer": 0.932258064516129,
-    "current_vs_forensic_wer": 0.9195804195804196,
-    "blind_vs_forensic_wer": 0.5524475524475524
+    "current_vs_blind_wer": 0.602112676056338,
+    "current_vs_forensic_wer": 0.20802919708029197,
+    "blind_vs_forensic_wer": 0.5948905109489051
   },
   "line_counts": {
-    "current": 30,
-    "blind": 26,
-    "forensic": 29,
-    "final": 23
+    "current": 22,
+    "blind": 19,
+    "forensic": 30,
+    "final": 21
   },
   "final_lines": [
-    "٦٥٠٠ ليرة اسرائيل",
-    "عقد اتفاقية بيع نصف أرض",
-    "فقد تم بيع نصف دونم بمبلغ ستة آلاف وخمسمئة ليرة اسرائيل لارض",
-    "الفريق الاول: محمد محمود سليمان الرمح من الخليل محلة الشيخ",
-    "الفريق الثاني: صبحيه حسن سعيد الزبير وولدها حماده محمد محمود [غير واضح] من قبل محمد الشيخ",
-    "[غير واضح] الفريقان [غير واضح] على ما يلي:",
-    "١- يدفع الفريق الأول للفريق الثاني مبلغ ستة آلاف وخمسمئة ليرة اسرائيل لاعتبار ذلك وذلك ثمناً لتمام الدين الذي عليه الفريق الثاني وباقيه للفريق الأول من [غير واضح] سند [غير واضح]",
-    "٢- سلم الفريق الثاني للفريق الأول قطعة الأرض التي يملكها دون نزاع والتي باعها للفريق الأول وآلت ملكيتها إليه، ودفع [غير واضح] مساحتها حوالي نصف دونم، والواقعة في منطقة [غير واضح] والتي تحدها من الشمال والغرب ملك دباب محمود ومحمد أحمد أبو بيض الشواكة",
-    "٣- يعتبر هذا السند بصك الفريق الأول مالكاً شرعاً للأحكام [غير واضح] وبدون مماطلة",
-    "٤- على الفريق الثاني أن [غير واضح] للفريق الأول عن ملكية الأراضي لدى دوائر الطابو إذا طلب الفريق الأول ذلك",
-    "٥- يدفع الفريق الأول جميع المصاريف المتعلقة بتغيير ملكية الأرض من اسم الفريق الثاني إلى اسم الفريق الأول",
-    "٦- يدفع كل فريق من الفريقين مبلغ عشرة آلاف ليرة اسرائيل غرامة للفريق الآخر إذا أخل بما ورد في هذا العقد",
-    "٧- لهذه الأرض طريق عرضها متران من ملك محمد سعدي السديه ثم من ملك ضرار محمد أبو ارسبيه حتى تصل إلى شارع [غير واضح] وهو الذي يسمى (الجلاد)",
-    "جرى تحرير هذا العقد في اليوم الثاني عشر من شهر تموز ١٩٧٠م",
-    "أمام شهود عدول واشهد عليه شهود",
+    "٦٥٠٠ ليرة اسرائيلي",
+    "عقد انتقال بيع قطعة أرض",
+    "فقط ستة آلاف وخمسمائة ليرة اسرائيلي لا غير",
+    "الفريق الأول: حسني محمود سليمان الرعد من الجليل محلة الشعب",
+    "الفريق الثاني: صبيحة حسن سعيد الزعبي وولدها حماده محمد محفوظ من محلة الشعب",
+    "لقد تم الاتفاق بين الفريقين على ما يلي:",
+    "١- يدفع الفريق الأول للفريق الثاني مبلغ (٦٥٠٠) ستة آلاف وخمسمائة ليرة اسرائيلي لا غير وذلك ثمناً لتملك الأرض التي يملكها الفريق الثاني ويبيعها للفريق الأول في منطقة [غير واضح] الصفاري من أراضي الحمص",
+    "٢- يسلم الفريق الثاني للفريق الأول قطعة الأرض التي يملكها دون نزاع ونقاش، وآلت ملكيتها إليه، والتي تحدها من الشمال والغرب ملك دباب محمد وحدود [غير واضح] الجنوب على محمد سعيد السديه وسعيد الزعبي، ومن الشرق ملك دباب عمر ومحمد أحمد أبو بكر القواكه",
+    "٣- بموجب هذا العقد يصبح الفريق الأول مالكاً شرعياً للأرض ويحق له التصرف بها كيفما يشاء",
+    "٤- على الفريق الثاني أن يتنازل للفريق الأول عن ملكيته للأرض لدى دوائر الطابو إذا طلب الفريق الأول منه ذلك",
+    "٥- يدفع الفريق الأول جميع الضرائب والمستحقات المترتبة على الأرض منذ تاريخ العقد",
+    "٦- يدفع كل فريق من الطرفين مبلغ خمسة آلاف ليرة اسرائيلي للفريق الآخر إذا أخل بما ورد في هذا العقد",
+    "٧- لهذه الأرض حدود ومنافذ تبدأ من ملك محمد سعيد السديه ثم مدخل مزرعة محمد أبو ارسنيه حتى تصل إلى شارع الحاكم وهو الذي يسمى (الجلاد)",
+    "جرى تحرير هذا العقد في اليوم الثاني عشر من شهر تموز ١٩٧٠م.",
+    "أمام شهود عدول وهم [غير واضح]",
     "شاهد [غير واضح]",
-    "شاهد",
-    "شاهد أبو حماد [غير واضح]",
-    "شاهد محمد سعيد [غير واضح]",
-    "شاهد [غير واضح] زهير [غير واضح]",
-    "توقيع أو بصمة صبحيه حسن سعيد الزبير",
-    "توقيع حماده محمد محمود",
-    "صبحيه [غير واضح] شاهد [غير واضح]"
+    "شاهد [غير واضح]",
+    "شاهد حماده",
+    "توقيع أم نعمه صبيحة حسني سعيد الزعبي",
+    "توقيع حماده محمد محفوظ",
+    "شهادة [غير واضح] صبيحة [غير واضح]"
   ],
-  "original_image": "D:\\projects\\arabic-ocr\\input\\sample_1.jpg",
-  "evaluation_image": "D:\\projects\\arabic-ocr\\log\\sample_1\\sample_1_preprocessed.png",
-  "selection": {
-    "accepted_retry": true,
-    "authoritative_output": "D:\\projects\\arabic-ocr\\output\\sample_1\\final.txt",
-    "rule": "score must not decrease, estimated WER must not increase, and one must improve"
+  "exact_metrics_note": "Offline recalculation; disputed reference transcriptions and candidate uncertainty placeholders excluded; no API calls. Blind/forensic texts were not persisted, so only current and final were recalculated.",
+  "exact_metrics": {
+    "current": {
+      "wer": 0.49122807017543857,
+      "cer": 0.33857030636292224,
+      "word_edits": 140,
+      "reference_words": 285,
+      "char_edits": 431,
+      "reference_characters": 1273
+    },
+    "final": {
+      "wer": 0.47719298245614034,
+      "cer": 0.3487824037706206,
+      "word_edits": 136,
+      "reference_words": 285,
+      "char_edits": 444,
+      "reference_characters": 1273
+    }
   }
 }

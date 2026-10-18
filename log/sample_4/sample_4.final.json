@@ -4,13 +4,29 @@
     "size": 139450,
     "mtime_ns": 1792206483753418200
   },
-  "model_profile": "lite",
-  "document_type": "printed",
-  "classification_confidence": 0.85,
+  "model_profile": "free",
+  "document_type": "unclassified",
+  "classification_confidence": null,
+  "model_domain": "Arabic handwriting (KHATT)",
   "models": {
-    "primary": "anthropic/claude-haiku-5.5",
-    "secondary": "openai/gpt-6-luna",
-    "recheck": "anthropic/claude-haiku-5.5"
+    "primary": "FixFips/arabicocr-khatt (CRNN-CTC)",
+    "secondary": null,
+    "recheck": null
+  },
+  "local_ocr": {
+    "engine": "FixFips/arabicocr-khatt (CRNN-CTC)",
+    "lines": [
+      "يي يييق تيبيتيت# يتيث يي# ويي يقي يشيتلي\"",
+      "يتريةؤقنية # قيراقية##ي ي تري # يشر ر .",
+      "اع سبل التعال د، ن # .",
+      "ر يقر #ر يتيدي تتي قنيتي يير يي يييي",
+      "ل# ملام الاجاق # هذا لع# ط اا",
+      "طه # ان ها # ومععات لهماا 101999998.",
+      "و #ي ف لا"
+    ],
+    "elapsed_seconds": 6.423077799998282,
+    "error": null,
+    "segmentation": "tiled_line_segmentation"
   },
   "preprocessing": {
     "original_width": 1032,
@@ -23,13 +39,13 @@
     "orientation_applied": 0,
     "orientation_confidence": 0.1224,
     "orientation_scores": {
-      "0": 5.771,
-      "90": -0.4198,
-      "180": 5.9546,
-      "270": 0.6123
+      "0": 5.7705,
+      "90": -0.4194,
+      "180": 5.9541,
+      "270": 0.6128
     },
     "deskew_angle": 0.0,
-    "blur_variance": 63.21,
+    "blur_variance": 63.11,
     "contrast_std": 33.22,
     "low_resolution_input": true
   },
@@ -54,108 +70,45 @@
   },
   "crop_route": {
     "attempted": false,
-    "selected": "full",
-    "full_lines": 17,
-    "crop_lines": 0,
-    "judge": null,
-    "reason": "crop skipped: regions cover almost the full page (100.0%)"
+    "selected": "tiled_line_segmentation",
+    "reason": "local heuristic segmentation followed by KHATT CRNN-CTC only"
   },
-  "detected_line_bands": 16,
+  "detected_line_bands": 7,
   "lines": [
     {
-      "text": "[[UNRESOLVED | A: ( ٢ ) | B: (٢)]]",
-      "flag": "unresolved",
-      "similarity": 0.75
+      "text": "يي يييق تيبيتيت# يتيث يي# ويي يقي يشيتلي\"",
+      "flag": "single_local_model",
+      "similarity": 1.0
     },
     {
-      "text": "(٨) لما كان القانون يقضي بتسجيل هذا البيع والشراء لدى المراجع المختصة",
-      "flag": "agreed",
-      "similarity": 0.8841
+      "text": "يتريةؤقنية # قيراقية##ي ي تري # يشر ر .",
+      "flag": "single_local_model",
+      "similarity": 1.0
     },
     {
-      "text": "والرسمية واتخاذ اجراءات مهنة ومحددة فان الفريق الاول يتعهد ويلتزم بالفراغ",
-      "flag": "agreed",
-      "similarity": 0.9054
+      "text": "اع سبل التعال د، ن # .",
+      "flag": "single_local_model",
+      "similarity": 1.0
     },
     {
-      "text": "والتنازل عن المبيع الموصوف فيما تقدم لامر الفريق الثاني لدى جميع الدوائر",
-      "flag": "agreed",
-      "similarity": 0.9306
+      "text": "ر يقر #ر يتيدي تتي قنيتي يير يي يييي",
+      "flag": "single_local_model",
+      "similarity": 1.0
     },
     {
-      "text": "الرسمية والمختصة بما في ذلك دوائر الاراضي والتسجيل والطالية والبلدية بالتوقيع",
-      "flag": "agreed",
-      "similarity": 0.9221
+      "text": "ل# ملام الاجاق # هذا لع# ط اا",
+      "flag": "single_local_model",
+      "similarity": 1.0
     },
     {
-      "text": "على جميع الاوراق والمحاضر والمستندات والوثائق وبالقيام كذلك بكل عمل ومحافظة",
-      "flag": "single_source_a",
-      "similarity": 0.7484
+      "text": "طه # ان ها # ومععات لهماا 101999998.",
+      "flag": "single_local_model",
+      "similarity": 1.0
     },
     {
-      "text": "واجراء حتى يكتسب هذا البيع وهذا العقد جميع الصور القانونية والصحيحة وحتى",
-      "flag": "agreed",
-      "similarity": 0.9861
-    },
-    {
-      "text": "يتم تنفيذ مضمون هذا العقد تنفيذا كاملا وحتى يتم تسجيل الجميع المذكور باسم",
-      "flag": "single_source_a",
-      "similarity": 0.8718
-    },
-    {
-      "text": "الفريق الثاني رسميا وقانونيا وذلك في اي وقت يحينسه الفريق الثاني .",
-      "flag": "single_source_a",
-      "similarity": 0.8759
-    },
-    {
-      "text": "(٩) رسوم الفراغ والتسجيل والانتقال عائدة على الفريق الثاني .",
-      "flag": "agreed",
-      "similarity": 0.9244
-    },
-    {
-      "text": "(١٠) الفريق الاول مسوؤل تجاه الفريق الثاني بالنسبة لعموم ما ورد في",
-      "flag": "corrected",
-      "similarity": 0.8485
-    },
-    {
-      "text": "هذا العقد مسؤولية كاملة مطلقة تامة شاملة ومتزم عن ازالة اية محارضات",
-      "flag": "agreed",
-      "similarity": 0.8592
-    },
-    {
-      "text": "او فارغات او حقوق للغير على مسوؤليته الخاصة ونفقته الشخصية كما وانه مسؤول",
-      "flag": "agreed",
-      "similarity": 0.863
-    },
-    {
-      "text": "عن كل عطل وضرر وتهديض وخسارة قد يتعرض لها الفريق الثاني نتيجة هذا التعاقد .",
-      "flag": "agreed",
-      "similarity": 0.9664
-    },
-    {
-      "text": "[[UNRESOLVED | A: على هذا تم الاتفاق وحرر هذا العقد وتلي على الفريقين وتعحا | B: وعليه فقد تم الاتفاق وحرر هذا العقد ووقع على الفريقين ويتسلم]]",
-      "flag": "unresolved",
-      "similarity": 0.8034
-    },
-    {
-      "text": "[[UNRESOLVED | A: عليه بعد ان فهما مضمونه ومحتهاته في هذا اليوم ١٩٧٢/٧/١٢ . | B: بعد أن تلياه وفهما مضمونه ومحتوياته في هذا اليوم ١٩٧٢/٧/١٢.]]",
-      "flag": "unresolved",
-      "similarity": 0.8448
-    },
-    {
-      "text": "[[UNRESOLVED | A: توقيع الشهود فريق ثاني فريق اول | B: تواقيع الشهود]]",
-      "flag": "unresolved",
-      "similarity": 0.5455
-    },
-    {
-      "text": "فريق ثاني",
-      "flag": "single_source_b",
-      "similarity": 0.0
-    },
-    {
-      "text": "فريق أول",
-      "flag": "single_source_b",
-      "similarity": 0.0
+      "text": "و #ي ف لا",
+      "flag": "single_local_model",
+      "similarity": 1.0
     }
   ]
 }

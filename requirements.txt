@@ -4,8 +4,12 @@ python-dotenv==1.2.2
 
 # Image loading and document preprocessing
 Pillow==12.1.1
-numpy==2.4.3
-opencv-python==5.0.0.93
+numpy==2.3.5
+opencv-python-headless==5.0.0.93
+
+# Single local OCR engine used by --free
+arabicocr-khatt==0.1.0
+rapidfuzz==3.14.6
 
 # PDF and Office document extraction/conversion
 PyMuPDF==1.28.2
