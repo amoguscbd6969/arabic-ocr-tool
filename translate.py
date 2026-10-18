@@ -1,7 +1,7 @@
 """Arabic translation pipeline with local and free candidate models.
 
 Verified mode compares a local direct/pivot OPUS-MT translation with a free
-OpenRouter multilingual translation, then asks Claude Haiku 5.5 to adjudicate.
+OpenRouter multilingual translation, then uses a free judge by default.
 Fast mode is entirely local and therefore makes no API calls.
 """
 
@@ -36,14 +36,14 @@ TRANSLATION_JUDGES = {
     "high": "anthropic/claude-haiku-5.5",
     "max": "openai/gpt-6-astra-pro",
 }
-ACTIVE_MODEL_PROFILE = "lite"
+ACTIVE_MODEL_PROFILE = "free"
 JUDGE_MODEL = TRANSLATION_JUDGES[ACTIVE_MODEL_PROFILE]
 USAGE = {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0}
 MODEL_USAGE: dict[str, dict] = {}
 
 
 def configure_model_profile(profile: str) -> None:
-    """Select the translation judge that belongs to an OCR model profile."""
+    """Select the translation judge independently from the OCR model profile."""
     if profile not in TRANSLATION_JUDGES:
         raise ValueError(f"Unknown model profile {profile!r}")
     global ACTIVE_MODEL_PROFILE, JUDGE_MODEL, MULTILINGUAL_MODEL
@@ -541,9 +541,9 @@ def main_cli() -> None:
             dest="model_profile",
             action="store_const",
             const=profile,
-            help=f"use the {profile} model profile (default: lite)",
+            help=f"use the {profile} translation profile (default: free)",
         )
-    parser.set_defaults(model_profile="lite")
+    parser.set_defaults(model_profile="free")
     args = parser.parse_args()
     configure_model_profile(args.model_profile)
 

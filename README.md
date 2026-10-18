@@ -99,7 +99,7 @@ python main.py report.pdf --document-mode full-ocr
 | Profile | Mục tiêu | Model điển hình |
 |---|---|---|
 | `--free` | OCR local, không API | ArabicOCR_KHATT CRNN-CTC, một model duy nhất |
-| `--lite` | Chi phí thấp, mặc định | Claude Haiku 5.5 và GPT-6 Luna |
+| `--lite` (mặc định) | Chi phí thấp, mặc định | Claude Haiku 5.5 và GPT-6 Luna |
 | `--high` | Chất lượng cao như pipeline ban đầu | Haiku/Luna cho tác vụ nhẹ, Sonnet 5.5 cho OCR khó, Opus 5.5 để adjudicate |
 | `--max` | Chất lượng cao nhất, chi phí cao | Claude Opus 5.5 và GPT-6 Astra Pro |
 
@@ -159,8 +159,10 @@ python main.py sample_1.jpg --translate vi --force-ocr
 
 `--translate` có thể lặp lại. Các mã được cấu hình sẵn là `en`, `vi`, `fr`, `de`, `es`, `it`, `pt`, `ru`, `zh`, `ja`, `ko`, `tr` và `id`.
 
-- `--translation-mode verified` là mặc định: tạo bản local direct/pivot, tạo thêm ứng viên multilingual miễn phí rồi dùng judge theo profile để chọn. Chế độ này có thể gọi OpenRouter.
+- `--translation-mode verified` là mặc định: tạo bản local direct/pivot, tạo thêm ứng viên multilingual miễn phí rồi dùng judge để chọn. Profile dịch mặc định là `free`, độc lập với profile OCR; vì vậy `--lite` trong ví dụ dưới chỉ áp dụng cho OCR. Chế độ này vẫn gọi OpenRouter nhưng mặc định chỉ dùng model miễn phí.
 - `--translation-mode fast`: chỉ dùng tuyến dịch local direct hoặc Arabic → English → ngôn ngữ đích; không gọi OpenRouter cho phần dịch.
+
+Muốn chủ động dùng judge trả phí, thêm `--translation-profile lite`, `high` hoặc `max`. Nếu không truyền tùy chọn này, chương trình dùng `--translation-profile free`.
 
 Ví dụ dịch một PDF hỗn hợp sang Anh và Việt:
 
@@ -173,7 +175,7 @@ python main.py report.pdf --document-mode mixed --lite `
 
 | Tùy chọn | Ý nghĩa |
 |---|---|
-| `--free`, `--lite`, `--high`, `--max` | Chọn profile model; mặc định `lite` |
+| `--free`, `--lite`, `--high`, `--max` | Chọn profile OCR; mặc định `lite` |
 | `--no-evolve` | Bỏ blind pass, forensic pass và final adjudication |
 | `--preprocess-only` | Chỉ tạo ảnh đã xử lý và report, không OCR |
 | `--document-mode mixed` | Trích xuất chữ đánh máy, chỉ OCR ảnh/scan |
@@ -181,6 +183,7 @@ python main.py report.pdf --document-mode mixed --lite `
 | `--translate LANG` | Dịch output; có thể lặp lại nhiều lần |
 | `--translation-mode verified` | So sánh ứng viên local và multilingual rồi kiểm chứng |
 | `--translation-mode fast` | Chỉ dùng model local, không gọi OpenRouter |
+| `--translation-profile free\|lite\|high\|max` | Chọn profile judge cho bản dịch; mặc định `free` |
 | `--force-ocr` | Không dùng OCR cache khi dịch |
 
 Xem toàn bộ trợ giúp:

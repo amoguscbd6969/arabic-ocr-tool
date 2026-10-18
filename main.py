@@ -694,11 +694,12 @@ def translate_output(
     final_text_path: str | Path,
     target_language: str,
     translation_mode: str = "verified",
+    translation_profile: str = "free",
 ) -> Path:
     """Translate a completed OCR result into one managed output artifact."""
     import translate
 
-    translate.configure_model_profile(paid_ocr.ACTIVE_MODEL_PROFILE)
+    translate.configure_model_profile(translation_profile)
 
     resolved_input = resolve_input_path(input_path)
     log_dir, output_dir = artifact_directories(resolved_input)
@@ -708,7 +709,7 @@ def translate_output(
         / "translation"
         / target_code
         / translation_mode
-        / paid_ocr.ACTIVE_MODEL_PROFILE
+        / translation_profile
     )
     translation_output = output_dir / "translations" / f"{target_code}.txt"
     result = translate.translate_file(
@@ -800,6 +801,15 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
+        "--translation-profile",
+        choices=["free", "lite", "high", "max"],
+        default="free",
+        help=(
+            "model profile used only for verified translation judging "
+            "(default: free; independent of the OCR profile)"
+        ),
+    )
+    parser.add_argument(
         "--force-ocr",
         action="store_true",
         help="ignore an existing output/<name>/final.txt and run OCR again before translation",
@@ -843,6 +853,7 @@ if __name__ == "__main__":
                     final_text_path,
                     target_language,
                     translation_mode=args.translation_mode,
+                    translation_profile=args.translation_profile,
                 )
     translation_module = sys.modules.get("translate")
     translation_usage = (
