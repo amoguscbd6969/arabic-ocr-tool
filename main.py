@@ -1,8 +1,7 @@
-"""Adaptive Arabic OCR pipeline via OpenRouter.
+"""Arabic OCR command entry point and pipeline orchestrator.
 
-Classify each page, use a lower-cost model for print and a stronger model for
-handwriting, validate per line, generate two prompt-diverse retries, and let a
-visual judge select whether the adjudicated retry should replace the draft.
+Remote paid OCR is isolated in ``paid_ocr.py``. This module resolves inputs,
+runs local preprocessing, coordinates OCR stages, and writes managed artifacts.
 
 Setup: pip install requests pillow python-dotenv numpy opencv-python-headless
 Run:   python main.py sample.jpg
@@ -16,87 +15,26 @@ Managed layout:
 """
 
 import argparse
-import base64
 import difflib
-import io
 import json
-import os
 import random
 import re
 import sys
-import time
 import unicodedata
 from pathlib import Path
 
-import requests
-from dotenv import load_dotenv
 from PIL import Image, ImageOps
 
 import calculate_cost
 import convert
+import paid_ocr
 import preprocess
-
-load_dotenv(Path(__file__).parent / ".env")
 
 PROJECT_DIR = Path(__file__).resolve().parent
 INPUT_DIR = PROJECT_DIR / "input"
 LOG_DIR = PROJECT_DIR / "log"
 OUTPUT_DIR = PROJECT_DIR / "output"
 
-API_KEY = os.getenv("OPENROUTER_API_KEY")
-URL = "https://openrouter.ai/api/v1/chat/completions"
-FREE_LOCAL_MODEL = "FixFips/arabicocr-khatt"
-MODEL_PROFILES = {
-    "free": {
-        "classifier": FREE_LOCAL_MODEL,
-        "printed": FREE_LOCAL_MODEL,
-        "handwritten": FREE_LOCAL_MODEL,
-        "secondary": FREE_LOCAL_MODEL,
-        "recheck": FREE_LOCAL_MODEL,
-        "crop": FREE_LOCAL_MODEL,
-        "crop_judge": FREE_LOCAL_MODEL,
-        "mark_blind": FREE_LOCAL_MODEL,
-        "mark_forensic": FREE_LOCAL_MODEL,
-        "mark_judge": FREE_LOCAL_MODEL,
-    },
-    "lite": {
-        "classifier": "anthropic/claude-haiku-5.5",
-        "printed": "anthropic/claude-haiku-5.5",
-        "handwritten": "anthropic/claude-haiku-5.5",
-        "secondary": "openai/gpt-6-luna",
-        "recheck": "anthropic/claude-haiku-5.5",
-        "crop": "anthropic/claude-haiku-5.5",
-        "crop_judge": "anthropic/claude-haiku-5.5",
-        "mark_blind": "anthropic/claude-haiku-5.5",
-        "mark_forensic": "openai/gpt-6-luna",
-        "mark_judge": "anthropic/claude-haiku-5.5",
-    },
-    "high": {
-        "classifier": "anthropic/claude-haiku-5.5",
-        "printed": "anthropic/claude-haiku-5.5",
-        "handwritten": "anthropic/claude-sonnet-5.5",
-        "secondary": "openai/gpt-6-luna",
-        "recheck": "anthropic/claude-sonnet-5.5",
-        "crop": "anthropic/claude-haiku-5.5",
-        "crop_judge": "anthropic/claude-haiku-5.5",
-        "mark_blind": "anthropic/claude-sonnet-5.5",
-        "mark_forensic": "anthropic/claude-sonnet-5.5",
-        "mark_judge": "anthropic/claude-opus-5.5",
-    },
-    "max": {
-        "classifier": "anthropic/claude-opus-5.5",
-        "printed": "anthropic/claude-opus-5.5",
-        "handwritten": "anthropic/claude-opus-5.5",
-        "secondary": "openai/gpt-6-astra-pro",
-        "recheck": "anthropic/claude-opus-5.5",
-        "crop": "anthropic/claude-opus-5.5",
-        "crop_judge": "openai/gpt-6-astra-pro",
-        "mark_blind": "anthropic/claude-opus-5.5",
-        "mark_forensic": "openai/gpt-6-astra-pro",
-        "mark_judge": "openai/gpt-6-astra-pro",
-    },
-}
-ACTIVE_MODEL_PROFILE = "lite"
 DOCUMENT_MODES = {"mixed", "full-ocr"}
 
 FUZZY_AGREEMENT = 0.85
@@ -104,45 +42,6 @@ ALIGNMENT_GAP_COST = 0.45
 AUDIT_RATE = 0.05
 IGNORE_DIACRITICS = False
 UNCLEAR_RE = re.compile(r"[\[\(\{]\s*غير\s+واضح\s*[\]\)\}]")
-USAGE = {"prompt_tokens": 0, "completion_tokens": 0, "calls": 0}
-MODEL_USAGE: dict[str, dict] = {}
-
-
-class OpenRouterResponseError(RuntimeError):
-    """Represent an error returned inside an otherwise successful HTTP response."""
-
-    def __init__(self, details) -> None:
-        self.details = details
-        self.status_code = details.get("code") if isinstance(details, dict) else None
-        message = details.get("message", str(details)) if isinstance(details, dict) else str(details)
-        super().__init__(message)
-
-
-def configure_model_profile(profile: str) -> None:
-    """Select all OCR/evaluation models for one strict cost-quality tier."""
-    if profile not in MODEL_PROFILES:
-        raise ValueError(f"Unknown model profile {profile!r}")
-    models = MODEL_PROFILES[profile]
-    global ACTIVE_MODEL_PROFILE
-    global MODEL_CLASSIFIER, MODEL_PRINTED, MODEL_HANDWRITTEN, MODEL_SECONDARY
-    global MODEL_RECHECK, MODEL_CROP, MODEL_CROP_JUDGE
-    global MODEL_MARK_BLIND, MODEL_MARK_FORENSIC, MODEL_MARK_JUDGE
-    ACTIVE_MODEL_PROFILE = profile
-    MODEL_CLASSIFIER = models["classifier"]
-    MODEL_PRINTED = models["printed"]
-    MODEL_HANDWRITTEN = models["handwritten"]
-    MODEL_SECONDARY = models["secondary"]
-    MODEL_RECHECK = models["recheck"]
-    MODEL_CROP = models["crop"]
-    MODEL_CROP_JUDGE = models["crop_judge"]
-    MODEL_MARK_BLIND = models["mark_blind"]
-    MODEL_MARK_FORENSIC = models["mark_forensic"]
-    MODEL_MARK_JUDGE = models["mark_judge"]
-
-
-configure_model_profile(ACTIVE_MODEL_PROFILE)
-
-
 def resolve_input_path(path: str | Path) -> Path:
     """Resolve explicit paths first, then convenient names inside input/."""
     candidate = Path(path)
@@ -229,99 +128,6 @@ def find_cached_ocr_output(
     return output_path
 
 
-def to_data_url(img: Image.Image, fmt: str = "PNG") -> str:
-    """Convert any PIL mode to a plain RGB data URL."""
-    if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
-        rgba = img.convert("RGBA")
-        bg = Image.new("RGB", rgba.size, (255, 255, 255))
-        bg.paste(rgba, mask=rgba.split()[-1])
-        img = bg
-    elif img.mode != "RGB":
-        img = img.convert("RGB")
-    buf = io.BytesIO()
-    img.save(buf, format=fmt)
-    encoded = base64.b64encode(buf.getvalue()).decode("utf-8")
-    return f"data:image/{fmt.lower()};base64,{encoded}"
-
-
-def _message_text(message: dict) -> str:
-    """Normalize OpenRouter string or content-block replies and reject blanks."""
-    content = message.get("content")
-    if isinstance(content, str):
-        result = content.strip()
-    elif isinstance(content, list):
-        result = "\n".join(
-            str(block.get("text", "")).strip()
-            for block in content
-            if isinstance(block, dict) and block.get("type") in {"text", "output_text"}
-        ).strip()
-    else:
-        result = ""
-    if not result:
-        raise ValueError("provider returned an empty/null message.content")
-    return result
-
-
-def chat(model: str, text: str, images: list[Image.Image], retries: int = 3) -> str:
-    """Make one OpenRouter chat-completions call with retry accounting."""
-    if ACTIVE_MODEL_PROFILE == "free":
-        raise RuntimeError(
-            "The --free OCR profile is local-only and does not permit OpenRouter calls"
-        )
-    if not API_KEY:
-        raise RuntimeError("OPENROUTER_API_KEY is not set")
-    content = [{"type": "text", "text": text}]
-    content.extend(
-        {"type": "image_url", "image_url": {"url": to_data_url(image)}}
-        for image in images
-    )
-    headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
-    last_error = None
-    attempts = [model] * retries
-    for attempt, candidate in enumerate(attempts):
-        payload = {
-            "model": candidate,
-            "messages": [{"role": "user", "content": content}],
-        }
-        try:
-            response = requests.post(URL, headers=headers, json=payload, timeout=120)
-            response.raise_for_status()
-            data = response.json()
-            if "error" in data:
-                raise OpenRouterResponseError(data["error"])
-            usage = data.get("usage") or {}
-            USAGE["prompt_tokens"] += usage.get("prompt_tokens", 0)
-            USAGE["completion_tokens"] += usage.get("completion_tokens", 0)
-            USAGE["calls"] += 1
-            calculate_cost.record_usage(MODEL_USAGE, candidate, usage)
-            answer = _message_text(data["choices"][0]["message"])
-            # Every OpenRouter OCR/evaluation prompt in this module requires
-            # JSON, so truncated prose must trigger the normal retry path.
-            parse_json(answer)
-            return answer
-        except Exception as exc:
-            last_error = RuntimeError(f"{candidate}: {exc}")
-            if attempt + 1 < len(attempts):
-                print(
-                    f"Model {candidate} failed ({exc}); retrying",
-                    file=sys.stderr,
-                )
-                time.sleep(2 ** attempt)
-    raise RuntimeError(
-        f"{model} failed across {len(attempts)} attempt(s): {last_error}"
-    )
-
-
-def parse_json(text: str):
-    """Extract the first JSON array or object from a possibly fenced reply."""
-    text = re.sub(r"```(?:json)?", "", text, flags=re.IGNORECASE).strip()
-    starts = [position for position in (text.find("["), text.find("{")) if position >= 0]
-    if not starts:
-        raise ValueError("no JSON found in reply")
-    value, _ = json.JSONDecoder().raw_decode(text[min(starts):])
-    return value
-
-
 def norm(text: str) -> str:
     text = unicodedata.normalize("NFKC", text).replace("\u0640", "")
     if IGNORE_DIACRITICS:
@@ -337,145 +143,9 @@ def similarity(left: str, right: str) -> float:
     return difflib.SequenceMatcher(None, norm(left), norm(right), autojunk=False).ratio()
 
 
-CLASSIFY_PROMPT = """Classify the Arabic document image by how its text was made.
-Return ONLY JSON in this exact shape:
-{"type":"printed|handwritten|mixed","confidence":0.0}
-Use "printed" only when text to transcribe is predominantly typeset. Use
-"handwritten" for predominantly handwriting, and "mixed" when both matter."""
-
-OCR_PROMPT = """Transcribe ALL Arabic text in this image exactly as written.
-- Keep diacritics if present. Do not correct spelling, translate, or infer missing words.
-- Use one JSON string per visual line, top to bottom, in natural reading order.
-- If a word truly cannot be read, write [غير واضح] only for that word.
-- Return ONLY a JSON array of strings, e.g. ["السطر الأول", "السطر الثاني"]"""
-
-CROP_CHOICE_PROMPT = """Compare two OCR readings of the same printed Arabic page.
-Candidate FULL was read from the entire enhanced page. Candidate CROPS was read
-from detected paragraph crops. Inspect the supplied page image as ground truth.
-
-Prefer the candidate that preserves every header, paragraph, footnote, number,
-and line in correct reading order with fewer invented or unreadable words. Do
-not prefer CROPS merely because it is longer or cleaner. Return ONLY JSON:
-{{"choice":"full|crops","confidence":0.0,"reason":"short reason"}}
-
-FULL:
-{full}
-
-CROPS:
-{crops}"""
-
-
-def classify_document(img: Image.Image) -> dict:
-    """Classify conservatively; uncertain printed pages take the stronger route."""
-    result = parse_json(chat(MODEL_CLASSIFIER, CLASSIFY_PROMPT, [img]))
-    page_type = str(result.get("type", "mixed")).strip().lower()
-    if page_type not in {"printed", "handwritten", "mixed"}:
-        page_type = "mixed"
-    try:
-        confidence = max(0.0, min(1.0, float(result.get("confidence", 0.0))))
-    except (TypeError, ValueError):
-        confidence = 0.0
-    if page_type == "printed" and confidence < 0.70:
-        page_type = "mixed"
-    return {"type": page_type, "confidence": confidence}
-
-
-def select_primary_model(page_type: str) -> str:
-    return MODEL_PRINTED if page_type == "printed" else MODEL_HANDWRITTEN
-
-
-def ocr(model: str, img: Image.Image) -> list[str]:
-    reply = parse_json(chat(model, OCR_PROMPT, [img]))
-    if not isinstance(reply, list):
-        raise ValueError(f"{model} returned JSON, but it was not an array")
-    lines = []
-    for item in reply:
-        text = str(item.get("text", "") if isinstance(item, dict) else item).strip()
-        if text:
-            lines.append(text)
-    return lines
-
-
 def preprocess_for_ocr(img: Image.Image) -> preprocess.PreprocessResult:
     """Run local document cleanup without any orientation correction."""
     return preprocess.preprocess_document(img, apply_orientation=False)
-
-
-def _fallback_crop_choice(full: list[str], crops: list[str]) -> tuple[str, str]:
-    """Conservative local fallback when the lightweight visual judge fails."""
-    full_text, crop_text = "\n".join(full), "\n".join(crops)
-    full_unclear = len(UNCLEAR_RE.findall(full_text))
-    crop_unclear = len(UNCLEAR_RE.findall(crop_text))
-    full_arabic = len(re.findall(r"[\u0600-\u06FF]", full_text))
-    crop_arabic = len(re.findall(r"[\u0600-\u06FF]", crop_text))
-    # Crops must retain nearly all visible content and improve uncertainty.
-    if crop_arabic >= full_arabic * 0.90 and crop_unclear < full_unclear:
-        return "crops", "local fallback: comparable coverage with fewer unclear spans"
-    return "full", "local fallback: crop improvement was not proven"
-
-
-def printed_ocr_with_optional_crops(
-    img: Image.Image,
-    prepared: preprocess.PreprocessResult,
-    boxes: list[preprocess.ParagraphBox],
-    layout_quality: preprocess.LayoutQuality,
-) -> tuple[list[str], dict]:
-    """Compare low-cost full-page OCR against low-cost paragraph-crop OCR."""
-    full_lines = ocr(MODEL_PRINTED, img)
-    metadata = {
-        "attempted": False,
-        "selected": "full",
-        "full_lines": len(full_lines),
-        "crop_lines": 0,
-        "judge": None,
-    }
-    if not layout_quality.passed:
-        metadata["reason"] = f"crop skipped: {layout_quality.reason}"
-        return full_lines, metadata
-
-    crops = preprocess.crop_paragraphs(prepared, boxes)
-    crop_lines = []
-    try:
-        for crop in crops:
-            crop_lines.extend(ocr(MODEL_CROP, crop))
-    except Exception as exc:
-        metadata.update({"attempted": True, "reason": f"crop OCR failed: {exc}"})
-        return full_lines, metadata
-    metadata.update({"attempted": True, "crop_lines": len(crop_lines)})
-    if not crop_lines:
-        metadata["reason"] = "crop OCR returned no lines"
-        return full_lines, metadata
-
-    prompt = CROP_CHOICE_PROMPT.format(
-        full=json.dumps(full_lines, ensure_ascii=False),
-        crops=json.dumps(crop_lines, ensure_ascii=False),
-    )
-    try:
-        decision = parse_json(chat(MODEL_CROP_JUDGE, prompt, [img]))
-        choice = str(decision.get("choice", "full")).lower()
-        confidence = max(0.0, min(1.0, float(decision.get("confidence", 0.0))))
-        if choice not in {"full", "crops"} or confidence < 0.60:
-            choice, reason = _fallback_crop_choice(full_lines, crop_lines)
-        else:
-            reason = str(decision.get("reason", ""))
-        metadata["judge"] = {
-            "model": MODEL_CROP_JUDGE,
-            "choice": choice,
-            "confidence": confidence,
-            "reason": reason,
-        }
-    except Exception as exc:
-        choice, reason = _fallback_crop_choice(full_lines, crop_lines)
-        metadata["judge"] = {
-            "model": "local_fallback",
-            "choice": choice,
-            "confidence": 0.0,
-            "reason": reason,
-            "error": str(exc),
-        }
-    metadata["selected"] = choice
-    metadata["reason"] = metadata["judge"]["reason"]
-    return (crop_lines if choice == "crops" else full_lines), metadata
 
 
 def segment_line_bands(img: Image.Image) -> list[tuple[int, int]]:
@@ -607,30 +277,6 @@ def align(a: list[str], b: list[str]) -> list[dict]:
     return aligned
 
 
-RECHECK_PROMPT = """Verify exactly ONE visual line of an Arabic document.
-Candidate A: {a}
-Candidate B: {b}
-
-Read only the supplied line crop. Return ONLY JSON:
-{{"supported":true,"text":"exact transcription"}}
-If the crop is not the claimed line or is too unclear, return:
-{{"supported":false,"text":""}}"""
-
-
-def recheck(crop: Image.Image, block: dict) -> dict:
-    prompt = RECHECK_PROMPT.format(a=block["a"] or "(nothing)", b=block["b"] or "(nothing)")
-    try:
-        result = parse_json(chat(MODEL_RECHECK, prompt, [crop]))
-        return {
-            "supported": bool(result.get("supported")),
-            "text": str(result.get("text", "")).strip(),
-        }
-    except Exception as exc:
-        message = f"recheck failed: {exc}"
-        print(message, file=sys.stderr)
-        return {"supported": False, "text": "", "error": message}
-
-
 def process(
     path: str,
     *,
@@ -666,7 +312,7 @@ def process(
 
     paragraph_boxes, layout_quality = preprocess.detect_arabic_paragraphs(prepared)
 
-    if ACTIVE_MODEL_PROFILE == "free":
+    if paid_ocr.ACTIVE_MODEL_PROFILE == "free":
         import local_ocr
 
         # ArabicOCR_KHATT includes preprocessing calibrated for KHATT. Feeding
@@ -693,7 +339,7 @@ def process(
         report = {
             "input": str(image_path),
             "source_signature": source_signature(image_path),
-            "model_profile": ACTIVE_MODEL_PROFILE,
+            "model_profile": paid_ocr.ACTIVE_MODEL_PROFILE,
             "document_type": "unclassified",
             "classification_confidence": None,
             "model_domain": "Arabic handwriting (KHATT)",
@@ -726,24 +372,24 @@ def process(
         )
         return output_path
 
-    classification = classify_document(img)
-    primary_model = select_primary_model(classification["type"])
+    classification = paid_ocr.classify_document(img)
+    primary_model = paid_ocr.select_primary_model(classification["type"])
     print(
         f"{path}: {classification['type']} "
         f"(confidence {classification['confidence']:.0%}); primary={primary_model}"
     )
     if classification["type"] == "printed":
-        a, crop_route = printed_ocr_with_optional_crops(
+        a, crop_route = paid_ocr.printed_ocr_with_optional_crops(
             img, prepared, paragraph_boxes, layout_quality
         )
     else:
-        a = ocr(primary_model, img)
+        a = paid_ocr.ocr(primary_model, img)
         crop_route = {
             "attempted": False,
             "selected": "full",
             "reason": f"crop OCR disabled for {classification['type']} page",
         }
-    b = ocr(MODEL_SECONDARY, img)
+    b = paid_ocr.ocr(paid_ocr.MODEL_SECONDARY, img)
     (log_dir / f"{artifact_name}_modelA.txt").write_text("\n".join(a), encoding="utf-8")
     (log_dir / f"{artifact_name}_modelB.txt").write_text("\n".join(b), encoding="utf-8")
 
@@ -755,7 +401,9 @@ def process(
         base = {"similarity": block["similarity"]}
         if block["status"] == "agree":
             if random.random() < AUDIT_RATE:
-                result = recheck(crop_visual_line(img, bands, ordinal, len(blocks)), block)
+                result = paid_ocr.recheck(
+                    crop_visual_line(img, bands, ordinal, len(blocks)), block
+                )
                 if result["supported"] and norm(result["text"]) != norm(block["a"]):
                     final.append({"text": result["text"], "flag": "corrected_by_audit", **base})
                     continue
@@ -776,7 +424,9 @@ def process(
             final.append({"text": text, "flag": flag, **base})
             continue
 
-        result = recheck(crop_visual_line(img, bands, ordinal, len(blocks)), block)
+        result = paid_ocr.recheck(
+            crop_visual_line(img, bands, ordinal, len(blocks)), block
+        )
         if result["supported"] and result["text"]:
             final.append({"text": result["text"], "flag": "corrected", **base})
         else:
@@ -792,13 +442,13 @@ def process(
     output = {
         "input": str(image_path),
         "source_signature": source_signature(image_path),
-        "model_profile": ACTIVE_MODEL_PROFILE,
+        "model_profile": paid_ocr.ACTIVE_MODEL_PROFILE,
         "document_type": classification["type"],
         "classification_confidence": classification["confidence"],
         "models": {
             "primary": primary_model,
-            "secondary": MODEL_SECONDARY,
-            "recheck": MODEL_RECHECK,
+            "secondary": paid_ocr.MODEL_SECONDARY,
+            "recheck": paid_ocr.MODEL_RECHECK,
         },
         "preprocessing": prepared.metadata,
         "preprocessed_image": str(preprocessed_path),
@@ -831,7 +481,11 @@ def evolve(
     sys.modules.setdefault("main", sys.modules[__name__])
     import mark
 
-    mark.configure_models(MODEL_MARK_BLIND, MODEL_MARK_FORENSIC, MODEL_MARK_JUDGE)
+    mark.configure_models(
+        paid_ocr.MODEL_MARK_BLIND,
+        paid_ocr.MODEL_MARK_FORENSIC,
+        paid_ocr.MODEL_MARK_JUDGE,
+    )
 
     image_path = Path(path)
     artifact_name = sanitize_artifact_name(artifact_name or image_path.stem)
@@ -990,7 +644,7 @@ def process_document(
         "input": str(input_path),
         "input_type": input_path.suffix.lower(),
         "source_signature": source_signature(input_path),
-        "model_profile": ACTIVE_MODEL_PROFILE,
+        "model_profile": paid_ocr.ACTIVE_MODEL_PROFILE,
         "document_mode": document_mode,
         "parts": part_reports,
         "typed_parts": sum(part.kind == "text" for part in parts),
@@ -1015,7 +669,7 @@ def process_input(
 ) -> Path:
     """Dispatch a regular image or a supported document through the pipeline."""
     input_path = resolve_input_path(path)
-    if ACTIVE_MODEL_PROFILE == "free" and use_evolution:
+    if paid_ocr.ACTIVE_MODEL_PROFILE == "free" and use_evolution:
         print(
             f"{input_path}: evolutionary retry disabled for --free "
             "(single local CRNN-CTC model)"
@@ -1044,13 +698,17 @@ def translate_output(
     """Translate a completed OCR result into one managed output artifact."""
     import translate
 
-    translate.configure_model_profile(ACTIVE_MODEL_PROFILE)
+    translate.configure_model_profile(paid_ocr.ACTIVE_MODEL_PROFILE)
 
     resolved_input = resolve_input_path(input_path)
     log_dir, output_dir = artifact_directories(resolved_input)
     target_name, target_code = translate.normalize_target(target_language)
     translation_log = (
-        log_dir / "translation" / target_code / translation_mode / ACTIVE_MODEL_PROFILE
+        log_dir
+        / "translation"
+        / target_code
+        / translation_mode
+        / paid_ocr.ACTIVE_MODEL_PROFILE
     )
     translation_output = output_dir / "translations" / f"{target_code}.txt"
     result = translate.translate_file(
@@ -1084,7 +742,7 @@ def preprocess_only(path: str) -> Path:
             {
                 "input": str(input_path),
                 "output": str(output_path),
-                "model_profile": ACTIVE_MODEL_PROFILE,
+                "model_profile": paid_ocr.ACTIVE_MODEL_PROFILE,
                 "preprocessing": result.metadata,
                 "paragraph_detection": {
                     "quality": quality.as_dict(),
@@ -1157,8 +815,8 @@ if __name__ == "__main__":
         )
     parser.set_defaults(model_profile="lite")
     args = parser.parse_args()
-    configure_model_profile(args.model_profile)
-    print(f"Model profile: {ACTIVE_MODEL_PROFILE}")
+    paid_ocr.configure_model_profile(args.model_profile)
+    print(f"Model profile: {paid_ocr.ACTIVE_MODEL_PROFILE}")
     if args.preprocess_only and args.translate:
         parser.error("--translate cannot be combined with --preprocess-only")
     for input_path in args.inputs:
@@ -1193,7 +851,7 @@ if __name__ == "__main__":
         else {}
     )
     cost_report = calculate_cost.build_cost_report(
-        {"ocr": MODEL_USAGE, "translation": translation_usage},
+        {"ocr": paid_ocr.MODEL_USAGE, "translation": translation_usage},
         command=sys.argv,
     )
     calculate_cost.print_cost_report(cost_report)

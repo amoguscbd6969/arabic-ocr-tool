@@ -1,7 +1,7 @@
 {
   "input": "D:\\projects\\arabic-ocr\\input\\sample_1.jpg",
   "output": "D:\\projects\\arabic-ocr\\log\\sample_1\\sample_1_preprocessed.png",
-  "model_profile": "lite",
+  "model_profile": "free",
   "preprocessing": {
     "original_width": 1034,
     "original_height": 1600,

@@ -17,11 +17,12 @@ from pathlib import Path
 from PIL import Image
 
 import main
+import paid_ocr
 
 
-MODEL_BLIND = main.MODEL_MARK_BLIND
-MODEL_FORENSIC = main.MODEL_MARK_FORENSIC
-MODEL_JUDGE = main.MODEL_MARK_JUDGE
+MODEL_BLIND = paid_ocr.MODEL_MARK_BLIND
+MODEL_FORENSIC = paid_ocr.MODEL_MARK_FORENSIC
+MODEL_JUDGE = paid_ocr.MODEL_MARK_JUDGE
 
 
 def configure_models(blind: str, forensic: str, judge: str) -> None:
@@ -102,7 +103,7 @@ def json_lines(lines: list[str]) -> str:
 
 
 def parse_lines(reply: str) -> list[str]:
-    value = main.parse_json(reply)
+    value = paid_ocr.parse_json(reply)
     if not isinstance(value, list):
         raise ValueError("transcription response is not a JSON array")
     result = []
@@ -170,7 +171,7 @@ def pairwise_wer(left: list[str], right: list[str]) -> float:
 
 
 def transcribe(model: str, prompt: str, img: Image.Image) -> list[str]:
-    return parse_lines(main.chat(model, prompt, [img]))
+    return parse_lines(paid_ocr.chat(model, prompt, [img]))
 
 
 def adjudicate(
@@ -184,7 +185,7 @@ def adjudicate(
         blind=json_lines(blind),
         forensic=json_lines(forensic),
     )
-    result = main.parse_json(main.chat(MODEL_JUDGE, prompt, [img]))
+    result = paid_ocr.parse_json(paid_ocr.chat(MODEL_JUDGE, prompt, [img]))
     if not isinstance(result, dict) or not isinstance(result.get("lines"), list):
         raise ValueError("judge response does not contain a lines array")
     result["lines"] = [str(line).strip() for line in result["lines"] if str(line).strip()]
@@ -230,7 +231,7 @@ def run(image_path: Path, candidate_path: Path, reference_path: Path | None = No
             "forensic": MODEL_FORENSIC,
             "judge": MODEL_JUDGE,
         },
-        "model_profile": main.ACTIVE_MODEL_PROFILE,
+        "model_profile": paid_ocr.ACTIVE_MODEL_PROFILE,
         "current_score_10": judgement["current_score_10"],
         "current_estimated_wer": judgement["current_estimated_wer"],
         "final_score_10": judgement["final_score_10"],
@@ -284,11 +285,11 @@ def main_cli() -> None:
     parser.set_defaults(model_profile="lite")
     args = parser.parse_args()
 
-    main.configure_model_profile(args.model_profile)
+    paid_ocr.configure_model_profile(args.model_profile)
     configure_models(
-        main.MODEL_MARK_BLIND,
-        main.MODEL_MARK_FORENSIC,
-        main.MODEL_MARK_JUDGE,
+        paid_ocr.MODEL_MARK_BLIND,
+        paid_ocr.MODEL_MARK_FORENSIC,
+        paid_ocr.MODEL_MARK_JUDGE,
     )
 
     image = main.resolve_input_path(args.image)
@@ -318,8 +319,9 @@ def main_cli() -> None:
     print(f"Wrote {output}")
     print(f"Wrote {report_path}")
     print(
-        f"API calls: {main.USAGE['calls']}, prompt tokens: {main.USAGE['prompt_tokens']}, "
-        f"completion tokens: {main.USAGE['completion_tokens']}"
+        f"API calls: {paid_ocr.USAGE['calls']}, "
+        f"prompt tokens: {paid_ocr.USAGE['prompt_tokens']}, "
+        f"completion tokens: {paid_ocr.USAGE['completion_tokens']}"
     )
 
 

@@ -477,7 +477,8 @@ Các hướng tiếp theo:
 
 | File | Vai trò |
 |---|---|
-| `main.py` | CLI, routing, dual OCR, alignment, recheck, evolution, caching và cost summary |
+| `main.py` | CLI/input routing, orchestration pipeline, alignment, caching, log và output |
+| `paid_ocr.py` | Model profiles trả phí, prompt, OpenRouter client, classify, OCR/crop và recheck |
 | `preprocess.py` | Perspective crop, deskew, tăng chất lượng ảnh và paragraph detection |
 | `convert.py` | Đọc PDF/Office/bảng tính, tách text/ảnh và render toàn trang |
 | `mark.py` | Blind/forensic retry, visual adjudication, WER/CER khi có reference |
