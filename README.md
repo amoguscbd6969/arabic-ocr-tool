@@ -1,6 +1,7 @@
 **English** | [Tiếng Việt](README.vi.md) | [العربية](README.ar.md)
 
 # Arabic OCR Pipeline
+[Project:](https://github.com/amoguscbd6969/arabic-ocr-tool)
 
 Arabic OCR Pipeline extracts Arabic text from images and mixed documents. Paid profiles combine document-scanner-style preprocessing, multiple vision-language models through OpenRouter, independent OCR comparison, targeted rechecks, and evolutionary prompting. The `--free` profile is a smaller local-only path using one Arabic handwriting CRNN-CTC model.
 
