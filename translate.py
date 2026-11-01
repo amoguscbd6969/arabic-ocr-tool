@@ -513,7 +513,7 @@ def translate_file(
         (log_dir / "pivot_english.txt").write_text(
             pivot_english, encoding="utf-8"
         )
-    report.update({"input": str(input_path), "output": str(output_path)})
+    report.update({"input": input_path.name, "output": output_path.name})
     (log_dir / "translation.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
     )

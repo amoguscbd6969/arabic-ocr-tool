@@ -7,7 +7,7 @@ Pillow==12.1.1
 numpy==2.3.5
 opencv-python-headless==5.0.0.93
 
-# Single local OCR engine used by --free
+# Local OCR engines used by --free
 arabicocr-khatt==0.1.0
 rapidfuzz==3.14.6
 
@@ -28,6 +28,8 @@ sentencepiece==0.2.2
 sacremoses==0.2.0
 
 # System tools that pip cannot install:
+# - llama.cpp is required for the Nuqta 0.8B GGUF candidate used by --free.
+#   Windows: winget install --id ggml.llamacpp --exact
 # - Poppler is required only when using pdf2image.
 # - LibreOffice is required for legacy .doc/.ppt conversion when Microsoft
 #   Office + pywin32 is unavailable.

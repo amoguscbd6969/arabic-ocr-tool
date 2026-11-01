@@ -3,7 +3,7 @@
 # Arabic OCR Pipeline
 [Project repositories link](https://github.com/amoguscbd6969/arabic-ocr-tool)
 
-Arabic OCR Pipeline extracts Arabic text from images and mixed documents. Paid profiles combine document-scanner-style preprocessing, multiple vision-language models through OpenRouter, independent OCR comparison, targeted rechecks, and evolutionary prompting. The `--free` profile is a smaller local-only path using one Arabic handwriting CRNN-CTC model.
+Arabic OCR Pipeline extracts Arabic text from images and mixed documents. Paid profiles combine document-scanner-style preprocessing, multiple vision-language models through OpenRouter, independent OCR comparison, targeted rechecks, and evolutionary prompting. The `--free` profile compares local CRNN-CTC and Nuqta 0.8B candidates; free text models on OpenRouter may only edit their combining marks and choose A/B during resolution.
 
 Supported capabilities:
 
@@ -40,7 +40,7 @@ OPENROUTER_API_KEY=sk-or-v1-...
 
 LibreOffice or Microsoft Office with `pywin32` is only needed for converting legacy Office formats or rendering complete Office pages. Poppler is only needed for `pdf2image` functionality; the primary PDF pipeline uses PyMuPDF. On first use, local translation downloads Helsinki-NLP models through Transformers and caches them.
 
-The `--free` OCR profile uses `arabicocr-khatt` and the `FixFips/arabicocr-khatt` checkpoint. Its first run downloads the checkpoint from Hugging Face; later runs are local. Set `ARABICOCR_KHATT_DEVICE=cpu` or `cuda` to select a device. `ARABICOCR_KHATT_UPSCALE` overrides the image scale factor; by default, images narrower than 1,500 px use `2.0`.
+The `--free` OCR profile uses `arabicocr-khatt` and Nuqta Arabic OCR 0.8B Q4 through `llama.cpp`. It automatically prefers `models/arabicocr-khatt-finetuned/crnn_best.pt`, falls back to `FixFips/arabicocr-khatt`, and can use another checkpoint through `ARABICOCR_KHATT_CHECKPOINT`. Install llama.cpp on Windows with `winget install --id ggml.llamacpp --exact`; the first Nuqta run downloads and caches its GGUF model. Set `NUQTA_LLAMA_CLI`, `NUQTA_TIMEOUT`, or `NUQTA_OFFLINE=1` to override discovery, timeout, or network behavior. Each valid candidate receives a constrained free-model diacritic pass, followed by a free A/B resolver. A repetition loop, timeout, or empty Nuqta result is rejected and falls back to CRNN.
 
 ### 1.2 General syntax
 
@@ -96,17 +96,17 @@ python main.py report.pdf --document-mode full-ocr
 
 | Profile | Purpose | Typical models |
 |---|---|---|
-| `--free` | Local OCR, no API | ArabicOCR_KHATT CRNN-CTC only |
+| `--free` | Two local OCR candidates + constrained free resolution | ArabicOCR_KHATT, Nuqta 0.8B Q4, free OpenRouter text models |
 | `--lite` (default) | Low-cost default | Claude Haiku 5.5 and GPT-6 Luna |
 | `--high` | Higher quality | Haiku/Luna for light tasks, Sonnet 5.5 for difficult OCR, Opus 5.5 for adjudication |
 | `--max` | Highest quality and cost | Claude Opus 5.5 and GPT-6 Astra Pro |
 
-Profile flags are mutually exclusive. Under `--free`, the pipeline skips classification, candidate B, cross-model rechecks, crop OCR by another model, and evolutionary prompting. Tall pages are split at low-ink regions so the recognizer does not merge lines; every strip is still recognized only by ArabicOCR_KHATT. If the model cannot load or run, the command stops with a clear error and never silently falls back to OpenRouter.
+Profile flags are mutually exclusive. Under `--free`, candidate A is CRNN-CTC and candidate B is Nuqta 0.8B Q4. Free OpenRouter models may alter combining marks in each candidate, then return only an A/B choice for every locally aligned block. The program copies the chosen candidate verbatim, so the resolver cannot author a third transcription. If Nuqta loops, times out, or is unavailable, the flow falls back to CRNN. If CRNN itself cannot run, the command stops instead of invoking a remote vision model.
 
 Selection guide:
 
 - No profile flag: `--lite`, suitable for most cases.
-- No paid/API handwriting OCR: `--free`, best for images close to the KHATT data domain.
+- No paid vision OCR: `--free`, best for images close to the KHATT data domain; it makes one free text call per valid candidate plus an A/B resolver when both candidates exist.
 - Difficult documents or higher accuracy: `--high`.
 - Important documents after estimating cost: `--max`.
 
@@ -125,7 +125,7 @@ Faster OCR by skipping the two retry prompts and visual adjudication:
 python main.py sample_1.jpg --lite --no-evolve
 ```
 
-This reduces API calls but may reduce quality when initial candidates disagree. `--free` always skips evolution and runs only local ArabicOCR_KHATT, so `--no-evolve` is unnecessary there.
+This reduces API calls but may reduce quality when initial candidates disagree. `--free` always skips evolution, so `--no-evolve` is unnecessary; its two diacritic passes and A/B resolver still run.
 
 Generate only the preprocessed image, with no API calls:
 
@@ -312,7 +312,7 @@ The retry replaces the baseline only if its score is not lower, estimated WER is
 
 #### Step 8: Cost accounting and recovery
 
-API usage is aggregated per model. `--free` makes no OCR API calls and records ArabicOCR_KHATT engine, duration, and errors while retaining the model in memory for batch reuse. Other profiles record OpenRouter usage for `calculate_cost.py`.
+API usage is aggregated per model. When both local candidates succeed, `--free` makes three zero-cost text calls: CRNN diacritics, Nuqta diacritics, and A/B resolution. Raw candidates are stored in `*_modelA.txt` and `*_modelB.txt`; guarded variants and the selected result use `*_modelA_diacritized.txt`, `*_modelB_diacritized.txt`, and `*_resolved.txt`.
 
 ## 3. Translation pipeline
 
@@ -413,7 +413,8 @@ Planned work includes human-reviewed ground truth, dedicated detectors for handw
 
 - **Do not treat output as a certified legal copy.** Verify names, places, money, dates, clauses, handwriting, seals, and signatures with the original and an Arabic reader.
 - **Choose the right document mode.** `mixed` is the default for files with a good text layer; `full-ocr` is slower and more expensive but helps with scans and broken text layers.
-- **`--free` is specialized for KHATT-like handwriting.** It may perform poorly on print, complex layouts, curved/blurred images, or out-of-domain styles, and intentionally has no API fallback.
+- **`--free` remains strongest near the models' domains.** CRNN targets KHATT-like handwriting; Nuqta targets broader Arabic documents but may loop on unclear handwriting, in which case its entire candidate is rejected. OpenRouter only edits diacritics or chooses A/B; it never performs vision OCR or invents a third candidate.
+- **Diacritics and exact WER are different targets.** KHATT references are commonly unvocalized, so adding correct vowel marks can increase strict WER. Use CER/WER on text normalized with the same diacritic policy when comparing checkpoints.
 - **`--translation-mode fast` only removes API use from translation.** OCR may still call the selected profile unless a valid cache exists.
 - **Cache is translation-specific.** Ordinary OCR commands rerun OCR; use `--force-ocr` to bypass cache explicitly during translation.
 - **Use unique input stems.** `report.pdf` and `report.jpg` both map to `output/report/` and can overwrite one another. Quote paths containing spaces.

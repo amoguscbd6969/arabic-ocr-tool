@@ -26,6 +26,6 @@
     "prompt_tokens": 0,
     "completion_tokens": 0
   },
-  "input": "D:\\projects\\arabic-ocr\\output\\sample\\final.txt",
-  "output": "D:\\projects\\arabic-ocr\\output\\sample\\translations\\vi.txt"
+  "input": "output/sample/final.txt",
+  "output": "output/sample/translations/vi.txt"
 }

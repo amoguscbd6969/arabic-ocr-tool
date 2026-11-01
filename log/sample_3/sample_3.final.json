@@ -1,5 +1,5 @@
 {
-  "input": "D:\\projects\\arabic-ocr\\input\\sample_3.jpg",
+  "input": "input/sample_3.jpg",
   "source_signature": {
     "size": 65013,
     "mtime_ns": 1792206476396439400
@@ -9,24 +9,65 @@
   "classification_confidence": null,
   "model_domain": "Arabic handwriting (KHATT)",
   "models": {
-    "primary": "FixFips/arabicocr-khatt (CRNN-CTC)",
-    "secondary": null,
-    "recheck": null
+    "primary": "Fine-tuned ArabicOCR_KHATT (crnn_best.pt)",
+    "secondary": "Nuqta Arabic OCR 0.8B Q4",
+    "recheck": "nvidia/nemotron-3.5-super-vl:free"
   },
   "local_ocr": {
-    "engine": "FixFips/arabicocr-khatt (CRNN-CTC)",
+    "engine": "Fine-tuned ArabicOCR_KHATT (crnn_best.pt)",
     "lines": [
-      "#####",
-      "شر النه الفو تسدينن العمنائ\" من العن الأسم .",
-      "# الا # .",
-      "وظ ث ي قييشي يشي يتي ييينية",
-      "لثاخي الجمدة الن ايهن \"اتقاجة التوق، و للسرا عن اليي .",
-      "وفنلها # فافق الاحترار #",
-      "ف05 99988"
+      "###",
+      "أشر النه المكو ش نن المن ن الع المم .",
+      "قة لا س#.",
+      "ف ق ر ي شييشية ي ية",
+      "الاا الجم الن العن امة التر للا عن الشر",
+      "افلها سط نافق الاحترار #",
+      "05 # 1988"
     ],
-    "elapsed_seconds": 6.219744100002572,
+    "elapsed_seconds": 10.6693950999761,
     "error": null,
     "segmentation": "tiled_line_segmentation"
+  },
+  "nuqta_ocr": {
+    "engine": "Nuqta Arabic OCR 0.8B Q4",
+    "lines": [
+      "١١ السيد الدكتور محمد عبدالقادر حاتم نائب رئيس مجلس الوزراء وزير الثقافة والاعلام تحية طيبة وبعد. أتشرف بأن أرسل الى سيادتكم مع هذا النسخة المحتمدة للنشر من قرار رئيس جمهورية مصر العربية رقم ٥٤٦ لسنة ١٩٧٢ باعتماد اقامة متحف أمير الشعراء أحمد ضرقى بكامل أرنى وبناء العقار رقم ٦ شارع أحمد شوقي بمحافظة الجهزة من أعمال المنفعة العامة. رجاء التفضل بالتمهيه بندهب من يلزم للاشراف على النشر بالجريدة الرسمية بعد مراجعة المؤتمرات. وغضلوا بقبول فائق الاحترام ١٩٧٢ أحمد طم مجلس الوزراء في ٢٤ مايو ١٩٧٢ (محمد ياسرى قنصوه)"
+    ],
+    "elapsed_seconds": 35.96628310007509,
+    "error": null,
+    "executable": "llama-mtmd-cli.exe",
+    "loop_detected": false
+  },
+  "diacritic_postprocess": {
+    "crnn": {
+      "text": "###\nأشر النه المكو ش نن المن ن الع المم .\nقة لا س#.\nف ق ر ي شييشية ي ية\nالاا الجم الن العن امة التر للا عن الشر\nافلها سط نافق الاحترار #\n05 # 1988",
+      "accepted": false,
+      "status": "fallback_no_api_key",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "error": "OPENROUTER_API_KEY is not set",
+      "elapsed_seconds": 9.00006853044033e-07
+    },
+    "nuqta": {
+      "text": "١١ السيد الدكتور محمد عبدالقادر حاتم نائب رئيس مجلس الوزراء وزير الثقافة والاعلام تحية طيبة وبعد. أتشرف بأن أرسل الى سيادتكم مع هذا النسخة المحتمدة للنشر من قرار رئيس جمهورية مصر العربية رقم ٥٤٦ لسنة ١٩٧٢ باعتماد اقامة متحف أمير الشعراء أحمد ضرقى بكامل أرنى وبناء العقار رقم ٦ شارع أحمد شوقي بمحافظة الجهزة من أعمال المنفعة العامة. رجاء التفضل بالتمهيه بندهب من يلزم للاشراف على النشر بالجريدة الرسمية بعد مراجعة المؤتمرات. وغضلوا بقبول فائق الاحترام ١٩٧٢ أحمد طم مجلس الوزراء في ٢٤ مايو ١٩٧٢ (محمد ياسرى قنصوه)",
+      "accepted": false,
+      "status": "fallback_no_api_key",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "error": "OPENROUTER_API_KEY is not set",
+      "elapsed_seconds": 2.00001522898674e-06
+    }
+  },
+  "free_resolution": {
+    "lines": [
+      "١١ السيد الدكتور محمد عبدالقادر حاتم نائب رئيس مجلس الوزراء وزير الثقافة والاعلام تحية طيبة وبعد. أتشرف بأن أرسل الى سيادتكم مع هذا النسخة المحتمدة للنشر من قرار رئيس جمهورية مصر العربية رقم ٥٤٦ لسنة ١٩٧٢ باعتماد اقامة متحف أمير الشعراء أحمد ضرقى بكامل أرنى وبناء العقار رقم ٦ شارع أحمد شوقي بمحافظة الجهزة من أعمال المنفعة العامة. رجاء التفضل بالتمهيه بندهب من يلزم للاشراف على النشر بالجريدة الرسمية بعد مراجعة المؤتمرات. وغضلوا بقبول فائق الاحترام ١٩٧٢ أحمد طم مجلس الوزراء في ٢٤ مايو ١٩٧٢ (محمد ياسرى قنصوه)"
+    ],
+    "choices": [
+      "B"
+    ],
+    "accepted": false,
+    "status": "fallback_no_api_key",
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "error": "OPENROUTER_API_KEY is not set",
+    "elapsed_seconds": 0.0011740999761968851
   },
   "preprocessing": {
     "original_width": 550,
@@ -49,7 +90,7 @@
     "contrast_std": 36.51,
     "low_resolution_input": true
   },
-  "preprocessed_image": "D:\\projects\\arabic-ocr\\log\\sample_3\\sample_3_preprocessed.png",
+  "preprocessed_image": "log/sample_3/sample_3_preprocessed.png",
   "paragraph_detection": {
     "quality": {
       "passed": false,
@@ -71,43 +112,22 @@
   "crop_route": {
     "attempted": false,
     "selected": "tiled_line_segmentation",
-    "reason": "local heuristic segmentation followed by KHATT CRNN-CTC only"
+    "reason": "KHATT CRNN-CTC and Nuqta run locally; OpenRouter free may edit combining marks and choose A/B blocks only"
   },
-  "detected_line_bands": 7,
+  "detected_line_bands": 1,
+  "free_alignment_mode": "whole_document",
+  "aligned_blocks": [
+    {
+      "a": "###\nأشر النه المكو ش نن المن ن الع المم .\nقة لا س#.\nف ق ر ي شييشية ي ية\nالاا الجم الن العن امة التر للا عن الشر\nافلها سط نافق الاحترار #\n05 # 1988",
+      "b": "١١ السيد الدكتور محمد عبدالقادر حاتم نائب رئيس مجلس الوزراء وزير الثقافة والاعلام تحية طيبة وبعد. أتشرف بأن أرسل الى سيادتكم مع هذا النسخة المحتمدة للنشر من قرار رئيس جمهورية مصر العربية رقم ٥٤٦ لسنة ١٩٧٢ باعتماد اقامة متحف أمير الشعراء أحمد ضرقى بكامل أرنى وبناء العقار رقم ٦ شارع أحمد شوقي بمحافظة الجهزة من أعمال المنفعة العامة. رجاء التفضل بالتمهيه بندهب من يلزم للاشراف على النشر بالجريدة الرسمية بعد مراجعة المؤتمرات. وغضلوا بقبول فائق الاحترام ١٩٧٢ أحمد طم مجلس الوزراء في ٢٤ مايو ١٩٧٢ (محمد ياسرى قنصوه)",
+      "status": "whole_document_choice",
+      "similarity": 0.0183
+    }
+  ],
   "lines": [
     {
-      "text": "#####",
-      "flag": "single_local_model",
-      "similarity": 1.0
-    },
-    {
-      "text": "شر النه الفو تسدينن العمنائ\" من العن الأسم .",
-      "flag": "single_local_model",
-      "similarity": 1.0
-    },
-    {
-      "text": "# الا # .",
-      "flag": "single_local_model",
-      "similarity": 1.0
-    },
-    {
-      "text": "وظ ث ي قييشي يشي يتي ييينية",
-      "flag": "single_local_model",
-      "similarity": 1.0
-    },
-    {
-      "text": "لثاخي الجمدة الن ايهن \"اتقاجة التوق، و للسرا عن اليي .",
-      "flag": "single_local_model",
-      "similarity": 1.0
-    },
-    {
-      "text": "وفنلها # فافق الاحترار #",
-      "flag": "single_local_model",
-      "similarity": 1.0
-    },
-    {
-      "text": "ف05 99988",
-      "flag": "single_local_model",
+      "text": "١١ السيد الدكتور محمد عبدالقادر حاتم نائب رئيس مجلس الوزراء وزير الثقافة والاعلام تحية طيبة وبعد. أتشرف بأن أرسل الى سيادتكم مع هذا النسخة المحتمدة للنشر من قرار رئيس جمهورية مصر العربية رقم ٥٤٦ لسنة ١٩٧٢ باعتماد اقامة متحف أمير الشعراء أحمد ضرقى بكامل أرنى وبناء العقار رقم ٦ شارع أحمد شوقي بمحافظة الجهزة من أعمال المنفعة العامة. رجاء التفضل بالتمهيه بندهب من يلزم للاشراف على النشر بالجريدة الرسمية بعد مراجعة المؤتمرات. وغضلوا بقبول فائق الاحترام ١٩٧٢ أحمد طم مجلس الوزراء في ٢٤ مايو ١٩٧٢ (محمد ياسرى قنصوه)",
+      "flag": "free_fallback",
       "similarity": 1.0
     }
   ]

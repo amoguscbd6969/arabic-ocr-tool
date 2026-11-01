@@ -224,8 +224,8 @@ def run(image_path: Path, candidate_path: Path, reference_path: Path | None = No
     final_lines = judgement["lines"]
 
     report = {
-        "image": str(image_path),
-        "candidate": str(candidate_path),
+        "image": image_path.name,
+        "candidate": candidate_path.name,
         "models": {
             "blind": MODEL_BLIND,
             "forensic": MODEL_FORENSIC,

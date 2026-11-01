@@ -1,5 +1,5 @@
 {
-  "input": "D:\\projects\\arabic-ocr\\input\\sample_4.jpg",
+  "input": "input/sample_4.jpg",
   "source_signature": {
     "size": 139450,
     "mtime_ns": 1792206483753418200
@@ -9,24 +9,68 @@
   "classification_confidence": null,
   "model_domain": "Arabic handwriting (KHATT)",
   "models": {
-    "primary": "FixFips/arabicocr-khatt (CRNN-CTC)",
-    "secondary": null,
-    "recheck": null
+    "primary": "Fine-tuned ArabicOCR_KHATT (crnn_best.pt)",
+    "secondary": "Nuqta Arabic OCR 0.8B Q4",
+    "recheck": "nvidia/nemotron-3.5-super-vl:free"
   },
   "local_ocr": {
-    "engine": "FixFips/arabicocr-khatt (CRNN-CTC)",
+    "engine": "Fine-tuned ArabicOCR_KHATT (crnn_best.pt)",
     "lines": [
-      "يي يييق تيبيتيت# يتيث يي# ويي يقي يشيتلي\"",
-      "يتريةؤقنية # قيراقية##ي ي تري # يشر ر .",
-      "اع سبل التعال د، ن # .",
-      "ر يقر #ر يتيدي تتي قنيتي يير يي يييي",
-      "ل# ملام الاجاق # هذا لع# ط اا",
-      "طه # ان ها # ومععات لهماا 101999998.",
-      "و #ي ف لا"
+      "وي شة ييية ر تنن وو شي\"",
+      "ة تشش أنة ير ## ث شر# .",
+      "ا لل التعال عه عن ع.",
+      "# ش ير # ييي شري \"ة .",
+      "ل ام الاطار # هذا المة لى لى ن اا",
+      "له # أن ها ومعاع لهماا اله 101111198.",
+      "ومع ال# ن ن لا"
     ],
-    "elapsed_seconds": 6.423077799998282,
+    "elapsed_seconds": 6.225661600008607,
     "error": null,
     "segmentation": "tiled_line_segmentation"
+  },
+  "nuqta_ocr": {
+    "engine": "Nuqta Arabic OCR 0.8B Q4",
+    "lines": [],
+    "elapsed_seconds": 5.046987599926069,
+    "error": "Nuqta returned no transcription",
+    "executable": "llama-mtmd-cli.exe",
+    "loop_detected": false
+  },
+  "diacritic_postprocess": {
+    "crnn": {
+      "text": "وي شة ييية ر تنن وو شي\"\nة تشش أنة ير ## ث شر# .\nا لل التعال عه عن ع.\n# ش ير # ييي شري \"ة .\nل ام الاطار # هذا المة لى لى ن اا\nله # أن ها ومعاع لهماا اله 101111198.\nومع ال# ن ن لا",
+      "accepted": true,
+      "status": "accepted_unchanged",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "error": null,
+      "elapsed_seconds": 2.2260662999469787
+    },
+    "nuqta": null
+  },
+  "free_resolution": {
+    "lines": [
+      "وي شة ييية ر تنن وو شي\"",
+      "ة تشش أنة ير ## ث شر# .",
+      "ا لل التعال عه عن ع.",
+      "# ش ير # ييي شري \"ة .",
+      "ل ام الاطار # هذا المة لى لى ن اا",
+      "له # أن ها ومعاع لهماا اله 101111198.",
+      "ومع ال# ن ن لا"
+    ],
+    "choices": [
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A"
+    ],
+    "accepted": false,
+    "status": "fallback_nuqta_unavailable",
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "error": "Nuqta returned no transcription",
+    "elapsed_seconds": 0.0
   },
   "preprocessing": {
     "original_width": 1032,
@@ -49,7 +93,7 @@
     "contrast_std": 33.22,
     "low_resolution_input": true
   },
-  "preprocessed_image": "D:\\projects\\arabic-ocr\\log\\sample_4\\sample_4_preprocessed.png",
+  "preprocessed_image": "log/sample_4/sample_4_preprocessed.png",
   "paragraph_detection": {
     "quality": {
       "passed": false,
@@ -71,43 +115,88 @@
   "crop_route": {
     "attempted": false,
     "selected": "tiled_line_segmentation",
-    "reason": "local heuristic segmentation followed by KHATT CRNN-CTC only"
+    "reason": "KHATT CRNN-CTC and Nuqta run locally; OpenRouter free may edit combining marks and choose A/B blocks only"
   },
   "detected_line_bands": 7,
+  "free_alignment_mode": "crnn_fallback",
+  "aligned_blocks": [
+    {
+      "a": "وي شة ييية ر تنن وو شي\"",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "ة تشش أنة ير ## ث شر# .",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "ا لل التعال عه عن ع.",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "# ش ير # ييي شري \"ة .",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "ل ام الاطار # هذا المة لى لى ن اا",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "له # أن ها ومعاع لهماا اله 101111198.",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "ومع ال# ن ن لا",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    }
+  ],
   "lines": [
     {
-      "text": "يي يييق تيبيتيت# يتيث يي# ويي يقي يشيتلي\"",
-      "flag": "single_local_model",
+      "text": "وي شة ييية ر تنن وو شي\"",
+      "flag": "free_fallback",
       "similarity": 1.0
     },
     {
-      "text": "يتريةؤقنية # قيراقية##ي ي تري # يشر ر .",
-      "flag": "single_local_model",
+      "text": "ة تشش أنة ير ## ث شر# .",
+      "flag": "free_fallback",
       "similarity": 1.0
     },
     {
-      "text": "اع سبل التعال د، ن # .",
-      "flag": "single_local_model",
+      "text": "ا لل التعال عه عن ع.",
+      "flag": "free_fallback",
       "similarity": 1.0
     },
     {
-      "text": "ر يقر #ر يتيدي تتي قنيتي يير يي يييي",
-      "flag": "single_local_model",
+      "text": "# ش ير # ييي شري \"ة .",
+      "flag": "free_fallback",
       "similarity": 1.0
     },
     {
-      "text": "ل# ملام الاجاق # هذا لع# ط اا",
-      "flag": "single_local_model",
+      "text": "ل ام الاطار # هذا المة لى لى ن اا",
+      "flag": "free_fallback",
       "similarity": 1.0
     },
     {
-      "text": "طه # ان ها # ومععات لهماا 101999998.",
-      "flag": "single_local_model",
+      "text": "له # أن ها ومعاع لهماا اله 101111198.",
+      "flag": "free_fallback",
       "similarity": 1.0
     },
     {
-      "text": "و #ي ف لا",
-      "flag": "single_local_model",
+      "text": "ومع ال# ن ن لا",
+      "flag": "free_fallback",
       "similarity": 1.0
     }
   ]

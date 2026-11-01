@@ -1,0 +1,16 @@
+* text=auto
+
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.txt text eol=lf
+*.ipynb text eol=lf
+
+# Preserve the historical generic fixture byte-for-byte.
+log/sample/** -text
+
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.pdf binary
+*.zip binary

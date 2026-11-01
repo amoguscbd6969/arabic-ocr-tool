@@ -1,16 +1,121 @@
 {
-  "input": "D:\\projects\\arabic-ocr\\input\\sample_1.jpg",
+  "input": "input/sample_1.jpg",
   "source_signature": {
     "size": 187332,
     "mtime_ns": 1792206453602069400
   },
-  "model_profile": "lite",
-  "document_type": "handwritten",
-  "classification_confidence": 0.95,
+  "model_profile": "free",
+  "document_type": "unclassified",
+  "classification_confidence": null,
+  "model_domain": "Arabic handwriting (KHATT)",
   "models": {
-    "primary": "anthropic/claude-haiku-5.5",
-    "secondary": "openai/gpt-6-luna",
-    "recheck": "anthropic/claude-haiku-5.5"
+    "primary": "Fine-tuned ArabicOCR_KHATT (crnn_best.pt)",
+    "secondary": "Nuqta Arabic OCR 0.8B Q4",
+    "recheck": "nvidia/nemotron-3.5-super-vl:free"
+  },
+  "local_ocr": {
+    "engine": "Fine-tuned ArabicOCR_KHATT (crnn_best.pt)",
+    "lines": [
+      "نسط ونه . سن الافس ومسننه لدة امرا لا غير",
+      "ايد ادل : يحس بحم. سلمان الزعد من الخلير محلة الشر",
+      "أنبناني ب سى مسعيد الريد وولدها مادة غمد حنوط من اللير محت الشم2",
+      "ي لتاني الييات ي ما لى :-",
+      "اتع لة اا ي ن م فالن لية ارة ل",
+      "ايم ن دي تديولتي ا ي التي يك ن ن الي في لذذا",
+      "ا والت يلكنها إليه والي بلغمساحترا موإلى نض نوم والرانه في منطته من بلد ل",
+      "االنصاي والتي جدان المل , الغي من وباماددثه الماد رد ومن الحزم ن ك ل",
+      "االسلديه و من الزق مل دام 03 وحدأر ال بعن الفراكه.",
+      "ا . مجرد من هذ السند بصح الفرين الاول مال شرعباللاوم يتعدف كن ن , وبدمن",
+      "ل عى الينناي أن تجا للن الأدل من مكي للأض لدى دواز الابر إذا طب ل",
+      "اال م الدول منه ذلل.",
+      ".نم الين الادل جمع المصا . بب المنعنم بتعبد ملك الان من أسم الزن الثانخ م 2",
+      "اا نسر مر الدول",
+      "البيد في هدة بتتفام :أنفيدة ارا غان نيلأخر إذا اقريا 2",
+      "ا حيم وا شيه ض تعن م لعام وهو الييمى (الملاية م من من ل",
+      "اجى ترر هذا القد في الزم النائي عشرنن شررة نا ).2",
+      "ا املم شدد عدول و الله خر ااهدمن",
+      "ا لن# وجاو -0",
+      "ا هموت# عيظمتري اية غذا",
+      "وسط",
+      ". #"
+    ],
+    "elapsed_seconds": 22.392470700084232,
+    "error": null,
+    "segmentation": "tiled_line_segmentation"
+  },
+  "nuqta_ocr": {
+    "engine": "Nuqta Arabic OCR 0.8B Q4",
+    "lines": [],
+    "elapsed_seconds": 17.15600129996892,
+    "error": "Nuqta repetition loop detected; candidate rejected",
+    "executable": "llama-mtmd-cli.exe",
+    "loop_detected": true
+  },
+  "diacritic_postprocess": {
+    "crnn": {
+      "text": "نسط ونه . سن الافس ومسننه لدة امرا لا غير\nايد ادل : يحس بحم. سلمان الزعد من الخلير محلة الشر\nأنبناني ب سى مسعيد الريد وولدها مادة غمد حنوط من اللير محت الشم2\nي لتاني الييات ي ما لى :-\nاتع لة اا ي ن م فالن لية ارة ل\nايم ن دي تديولتي ا ي التي يك ن ن الي في لذذا\nا والت يلكنها إليه والي بلغمساحترا موإلى نض نوم والرانه في منطته من بلد ل\nاالنصاي والتي جدان المل , الغي من وباماددثه الماد رد ومن الحزم ن ك ل\nاالسلديه و من الزق مل دام 03 وحدأر ال بعن الفراكه.\nا . مجرد من هذ السند بصح الفرين الاول مال شرعباللاوم يتعدف كن ن , وبدمن\nل عى الينناي أن تجا للن الأدل من مكي للأض لدى دواز الابر إذا طب ل\nاال م الدول منه ذلل.\n.نم الين الادل جمع المصا . بب المنعنم بتعبد ملك الان من أسم الزن الثانخ م 2\nاا نسر مر الدول\nالبيد في هدة بتتفام :أنفيدة ارا غان نيلأخر إذا اقريا 2\nا حيم وا شيه ض تعن م لعام وهو الييمى (الملاية م من من ل\nاجى ترر هذا القد في الزم النائي عشرنن شررة نا ).2\nا املم شدد عدول و الله خر ااهدمن\nا لن# وجاو -0\nا هموت# عيظمتري اية غذا\nوسط\n. #",
+      "accepted": true,
+      "status": "accepted_unchanged",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "error": null,
+      "elapsed_seconds": 5.9475903999991715
+    },
+    "nuqta": null
+  },
+  "free_resolution": {
+    "lines": [
+      "نسط ونه . سن الافس ومسننه لدة امرا لا غير",
+      "ايد ادل : يحس بحم. سلمان الزعد من الخلير محلة الشر",
+      "أنبناني ب سى مسعيد الريد وولدها مادة غمد حنوط من اللير محت الشم2",
+      "ي لتاني الييات ي ما لى :-",
+      "اتع لة اا ي ن م فالن لية ارة ل",
+      "ايم ن دي تديولتي ا ي التي يك ن ن الي في لذذا",
+      "ا والت يلكنها إليه والي بلغمساحترا موإلى نض نوم والرانه في منطته من بلد ل",
+      "االنصاي والتي جدان المل , الغي من وباماددثه الماد رد ومن الحزم ن ك ل",
+      "االسلديه و من الزق مل دام 03 وحدأر ال بعن الفراكه.",
+      "ا . مجرد من هذ السند بصح الفرين الاول مال شرعباللاوم يتعدف كن ن , وبدمن",
+      "ل عى الينناي أن تجا للن الأدل من مكي للأض لدى دواز الابر إذا طب ل",
+      "اال م الدول منه ذلل.",
+      ".نم الين الادل جمع المصا . بب المنعنم بتعبد ملك الان من أسم الزن الثانخ م 2",
+      "اا نسر مر الدول",
+      "البيد في هدة بتتفام :أنفيدة ارا غان نيلأخر إذا اقريا 2",
+      "ا حيم وا شيه ض تعن م لعام وهو الييمى (الملاية م من من ل",
+      "اجى ترر هذا القد في الزم النائي عشرنن شررة نا ).2",
+      "ا املم شدد عدول و الله خر ااهدمن",
+      "ا لن# وجاو -0",
+      "ا هموت# عيظمتري اية غذا",
+      "وسط",
+      ". #"
+    ],
+    "choices": [
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A",
+      "A"
+    ],
+    "accepted": false,
+    "status": "fallback_nuqta_unavailable",
+    "model": "nvidia/nemotron-3.5-super-vl:free",
+    "error": "Nuqta repetition loop detected; candidate rejected",
+    "elapsed_seconds": 0.0
   },
   "preprocessing": {
     "original_width": 1034,
@@ -33,7 +138,7 @@
     "contrast_std": 33.28,
     "low_resolution_input": true
   },
-  "preprocessed_image": "D:\\projects\\arabic-ocr\\log\\sample_1\\sample_1_preprocessed.png",
+  "preprocessed_image": "log/sample_1/sample_1_preprocessed.png",
   "paragraph_detection": {
     "quality": {
       "passed": false,
@@ -54,180 +159,255 @@
   },
   "crop_route": {
     "attempted": false,
-    "selected": "full",
-    "reason": "crop OCR disabled for handwritten page"
+    "selected": "tiled_line_segmentation",
+    "reason": "KHATT CRNN-CTC and Nuqta run locally; OpenRouter free may edit combining marks and choose A/B blocks only"
   },
-  "detected_line_bands": 31,
+  "detected_line_bands": 22,
+  "free_alignment_mode": "crnn_fallback",
+  "aligned_blocks": [
+    {
+      "a": "نسط ونه . سن الافس ومسننه لدة امرا لا غير",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "ايد ادل : يحس بحم. سلمان الزعد من الخلير محلة الشر",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "أنبناني ب سى مسعيد الريد وولدها مادة غمد حنوط من اللير محت الشم2",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "ي لتاني الييات ي ما لى :-",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "اتع لة اا ي ن م فالن لية ارة ل",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "ايم ن دي تديولتي ا ي التي يك ن ن الي في لذذا",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "ا والت يلكنها إليه والي بلغمساحترا موإلى نض نوم والرانه في منطته من بلد ل",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "االنصاي والتي جدان المل , الغي من وباماددثه الماد رد ومن الحزم ن ك ل",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "االسلديه و من الزق مل دام 03 وحدأر ال بعن الفراكه.",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "ا . مجرد من هذ السند بصح الفرين الاول مال شرعباللاوم يتعدف كن ن , وبدمن",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "ل عى الينناي أن تجا للن الأدل من مكي للأض لدى دواز الابر إذا طب ل",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "اال م الدول منه ذلل.",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": ".نم الين الادل جمع المصا . بب المنعنم بتعبد ملك الان من أسم الزن الثانخ م 2",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "اا نسر مر الدول",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "البيد في هدة بتتفام :أنفيدة ارا غان نيلأخر إذا اقريا 2",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "ا حيم وا شيه ض تعن م لعام وهو الييمى (الملاية م من من ل",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "اجى ترر هذا القد في الزم النائي عشرنن شررة نا ).2",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "ا املم شدد عدول و الله خر ااهدمن",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "ا لن# وجاو -0",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "ا هموت# عيظمتري اية غذا",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": "وسط",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    },
+    {
+      "a": ". #",
+      "b": "",
+      "status": "single_source",
+      "similarity": 0.0
+    }
+  ],
   "lines": [
     {
-      "text": "[غير واضح]",
-      "flag": "single_source_b",
-      "similarity": 0.0
+      "text": "نسط ونه . سن الافس ومسننه لدة امرا لا غير",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "٦٥٠٠ ليرة اسرائيل",
-      "flag": "single_source_a",
-      "similarity": 0.2963
+      "text": "ايد ادل : يحس بحم. سلمان الزعد من الخلير محلة الشر",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "عقد انتقاله بيع قطعة ارض",
-      "flag": "single_source_a",
-      "similarity": 0.1765
+      "text": "أنبناني ب سى مسعيد الريد وولدها مادة غمد حنوط من اللير محت الشم2",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "[غير واضح]",
-      "flag": "single_source_b",
-      "similarity": 0.0
+      "text": "ي لتاني الييات ي ما لى :-",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "[غير واضح]",
-      "flag": "single_source_b",
-      "similarity": 0.0
+      "text": "اتع لة اا ي ن م فالن لية ارة ل",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "نقداً وقدره ستة آلاف وخمسمائة ليرة اسرائيل لاغير",
-      "flag": "single_source_a",
-      "similarity": 0.1034
+      "text": "ايم ن دي تديولتي ا ي التي يك ن ن الي في لذذا",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "الفريق الأول : حسني محمود سليمان الرعد من الجليل محلة الشعب",
-      "flag": "single_source_a",
-      "similarity": 0.0
+      "text": "ا والت يلكنها إليه والي بلغمساحترا موإلى نض نوم والرانه في منطته من بلد ل",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "الفريق الثاني : صبحية حسن سعيد الزعبي وولدها حماده محمد محمود [غير واضح] من محلة الشعب",
-      "flag": "corrected",
-      "similarity": 0.2083
+      "text": "االنصاي والتي جدان المل , الغي من وباماددثه الماد رد ومن الحزم ن ك ل",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "[[UNRESOLVED | A: [غير واضح] المزيتان [غير واضح] ما يلي : | B: [غير واضح]]]",
-      "flag": "unresolved",
-      "similarity": 0.4082
+      "text": "االسلديه و من الزق مل دام 03 وحدأر ال بعن الفراكه.",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "[غير واضح]",
-      "flag": "single_source_b",
-      "similarity": 0.0
+      "text": "ا . مجرد من هذ السند بصح الفرين الاول مال شرعباللاوم يتعدف كن ن , وبدمن",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "١- يدفع الفريق الأول للفريق الثاني مبلغ ستة آلاف وخمسمائة ليرة اسرائيل",
-      "flag": "single_source_a",
-      "similarity": 0.1928
+      "text": "ل عى الينناي أن تجا للن الأدل من مكي للأض لدى دواز الابر إذا طب ل",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "[[UNRESOLVED | A: لا يعتبر ذلك ثمناً لتملك الأرض التي عليها الفريق الثاني وباقي الفريق الأول في منطقة سرور [غير واضح] الصفاري من أراضي الحمص | B: [غير واضح]]]",
-      "flag": "unresolved",
-      "similarity": 0.1515
+      "text": "اال م الدول منه ذلل.",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "٢- سلم الفريق الثاني للفريق الأول قطعة الأرض التي يملكها دون نقاش و الني ينفع للفريق الأول وآلت ملكيتها إليه ودينه يبلغ ساعتها موالي",
-      "flag": "single_source_a",
-      "similarity": 0.0
+      "text": ".نم الين الادل جمع المصا . بب المنعنم بتعبد ملك الان من أسم الزن الثانخ م 2",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "[[UNRESOLVED | A: الصفاري والتي تحدها من شمال والغرب ملك دباب محمد وسبعه وحدود [غير واضح] الجنوب على محمد سعيد السديه وسعيد الزعبي ملك دباب عمر ومحمد أحمد أبو بكر القواكه | B: [غير واضح]]]",
-      "flag": "unresolved",
-      "similarity": 0.1235
+      "text": "اا نسر مر الدول",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "٣- بموجب هذا العقد يصبح الفريق الأول مالكاً شرعياً للأرض ويحق له التصرف بها كيفما يشاء",
-      "flag": "single_source_a",
-      "similarity": 0.1042
+      "text": "البيد في هدة بتتفام :أنفيدة ارا غان نيلأخر إذا اقريا 2",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "٤- على الفريق الثاني أن يتنازل للفريق الأول عن ملكيته للأرض دون أي دوائر الطابو إذا طلب الفريق الأول منه ذلك",
-      "flag": "single_source_a",
-      "similarity": 0.0
+      "text": "ا حيم وا شيه ض تعن م لعام وهو الييمى (الملاية م من من ل",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "٥- يدفع الفريق الأول جميع الضرائب والمستحقات على الأرض منذ تاريخ العقد",
-      "flag": "single_source_a",
-      "similarity": 0.1928
+      "text": "اجى ترر هذا القد في الزم النائي عشرنن شررة نا ).2",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "[غير واضح]",
-      "flag": "single_source_b",
-      "similarity": 0.0
+      "text": "ا املم شدد عدول و الله خر ااهدمن",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "[غير واضح]",
-      "flag": "single_source_b",
-      "similarity": 0.0
+      "text": "ا لن# وجاو -0",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "[غير واضح]",
-      "flag": "single_source_b",
-      "similarity": 0.0
+      "text": "ا هموت# عيظمتري اية غذا",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "٦- يدفع كل فريق من الطرفين مبلغ خمسة آلاف ليرة اسرائيل للفريق الآخر إذا أخل بما ورد في هذا العقد",
-      "flag": "single_source_a",
-      "similarity": 0.1468
+      "text": "وسط",
+      "flag": "free_fallback",
+      "similarity": 1.0
     },
     {
-      "text": "٧- لهذه الأرض حدود ومنافذ تبدأ من ملك محمد سعيدي السديه ثم مدخل مزرعة محمد أبو ارسنيه حتى تصل إلى شارع الحاكم وهو الذي يسمى (الجلاد)",
-      "flag": "single_source_a",
-      "similarity": 0.0
-    },
-    {
-      "text": "جرى تحرير هذا العقد في اليوم الثاني عشر من شهر تموز ١٩٧٠م.",
-      "flag": "single_source_a",
-      "similarity": 0.1408
-    },
-    {
-      "text": "امام شهود عدول وهم هذه الشهادة",
-      "flag": "single_source_a",
-      "similarity": 0.186
-    },
-    {
-      "text": "[[UNRESOLVED | A: شاهد [غير واضح] | B: [غير واضح]]]",
-      "flag": "unresolved",
-      "similarity": 0.8
-    },
-    {
-      "text": "شاهد حماده",
-      "flag": "single_source_a",
-      "similarity": 0.1739
-    },
-    {
-      "text": "شاهد",
-      "flag": "single_source_a",
-      "similarity": 0.1429
-    },
-    {
-      "text": "[[UNRESOLVED | A: توقيع [غير واضح] شاهد | B: ٧- [غير واضح]]]",
-      "flag": "unresolved",
-      "similarity": 0.6471
-    },
-    {
-      "text": "توقيع حماده محمد محمود",
-      "flag": "single_source_a",
-      "similarity": 0.0
-    },
-    {
-      "text": "توقيع",
-      "flag": "single_source_a",
-      "similarity": 0.1333
-    },
-    {
-      "text": "[[UNRESOLVED | A: شهادة [غير واضح] الشهود [غير واضح] | B: شاهد [غير واضح] شاهد [غير واضح] شاهد [غير واضح]]]",
-      "flag": "unresolved",
-      "similarity": 0.716
-    },
-    {
-      "text": "[غير واضح]",
-      "flag": "single_source_b",
-      "similarity": 0.0
-    },
-    {
-      "text": "[غير واضح]",
-      "flag": "single_source_b",
-      "similarity": 0.0
-    },
-    {
-      "text": "[غير واضح]",
-      "flag": "single_source_b",
-      "similarity": 0.0
+      "text": ". #",
+      "flag": "free_fallback",
+      "similarity": 1.0
     }
   ]
 }

@@ -1,11 +1,53 @@
+# Secrets and machine-specific configuration
 .env*
+*.pem
+*.key
+*.p12
+*.pfx
+.vscode/
+.idea/
 TODO
 
+# Python, notebook, and tool caches
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.cache/
+**/.hf-cache/
+**/.mpl-cache/
 .venv/
 venv/
+
+# Datasets, downloaded weights, training output, and archives
+data/
+dataset/
+datasets/
+data_*/
+data*.zip
 *.rar
+*.7z
+*.tar
+*.tar.gz
+*.gguf
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+models/
+kaggle/*.zip
+kaggle/notebook*.ipynb
+
+# Explicit local/private work areas
+private/
+personal/
+secrets/
+scratch/
+tmp/
+*.tmp
+*.log
 
 # Keep exactly four end-to-end examples; ignore all other local documents/runs.
 input/*

@@ -1,7 +1,8 @@
 """Arabic OCR command entry point and pipeline orchestrator.
 
-Remote paid OCR is isolated in ``paid_ocr.py``. This module resolves inputs,
-runs local preprocessing, coordinates OCR stages, and writes managed artifacts.
+Paid OCR is isolated in ``paid_ocr.py`` and the local-first free profile is
+isolated in ``free_ocr.py``. This module resolves inputs, coordinates document
+processing, and writes managed logs and outputs.
 
 Setup: pip install requests pillow python-dotenv numpy opencv-python-headless
 Run:   python main.py sample.jpg
@@ -27,6 +28,7 @@ from PIL import Image, ImageOps
 
 import calculate_cost
 import convert
+import free_ocr
 import paid_ocr
 import preprocess
 
@@ -42,6 +44,17 @@ ALIGNMENT_GAP_COST = 0.45
 AUDIT_RATE = 0.05
 IGNORE_DIACRITICS = False
 UNCLEAR_RE = re.compile(r"[\[\(\{]\s*غير\s+واضح\s*[\]\)\}]")
+
+
+def report_path(path: str | Path) -> str:
+    """Return portable metadata without exposing a user's absolute path."""
+    resolved = Path(path).resolve()
+    try:
+        return resolved.relative_to(PROJECT_DIR).as_posix()
+    except ValueError:
+        return resolved.name
+
+
 def resolve_input_path(path: str | Path) -> Path:
     """Resolve explicit paths first, then convenient names inside input/."""
     candidate = Path(path)
@@ -313,44 +326,124 @@ def process(
     paragraph_boxes, layout_quality = preprocess.detect_arabic_paragraphs(prepared)
 
     if paid_ocr.ACTIVE_MODEL_PROFILE == "free":
-        import local_ocr
-
         # ArabicOCR_KHATT includes preprocessing calibrated for KHATT. Feeding
         # it our binarized preview can erase strokes, so recognize the raw page.
-        local_result = local_ocr.recognize(raw_img)
+        local_result = free_ocr.recognize_crnn(raw_img)
         if local_result.error or not local_result.lines:
             raise RuntimeError(
-                f"{local_ocr.MODEL_NAME} failed: "
+                f"{free_ocr.CRNN_MODEL_NAME} failed: "
                 f"{local_result.error or 'no text returned'}"
             )
+        crnn_raw = "\n".join(local_result.lines)
+        crnn_diacritics = free_ocr.correct_diacritics(
+            crnn_raw, source=free_ocr.CRNN_MODEL_NAME
+        )
+        nuqta_result = free_ocr.recognize_nuqta(raw_img)
+        nuqta_raw = "\n".join(nuqta_result.lines)
+        nuqta_diacritics = (
+            free_ocr.correct_diacritics(
+                nuqta_raw, source=free_ocr.NUQTA_MODEL_NAME
+            )
+            if nuqta_result.lines
+            else None
+        )
+
+        if nuqta_diacritics is not None:
+            crnn_lines = crnn_diacritics.text.splitlines()
+            nuqta_lines = nuqta_diacritics.text.splitlines()
+            line_count_gap = abs(len(crnn_lines) - len(nuqta_lines))
+            compatible_layout = line_count_gap <= max(
+                2, int(max(len(crnn_lines), len(nuqta_lines)) * 0.35)
+            )
+            if compatible_layout:
+                blocks = align(crnn_lines, nuqta_lines)
+                alignment_mode = "line_blocks"
+            else:
+                # Nuqta commonly returns a whole page as one paragraph. Keep
+                # resolution constrained to choosing one complete transcript
+                # instead of treating that paragraph as an inserted line.
+                blocks = [
+                    {
+                        "a": crnn_diacritics.text,
+                        "b": nuqta_diacritics.text,
+                        "status": "whole_document_choice",
+                        "similarity": round(
+                            difflib.SequenceMatcher(
+                                None,
+                                norm(crnn_diacritics.text),
+                                norm(nuqta_diacritics.text),
+                            ).ratio(),
+                            4,
+                        ),
+                    }
+                ]
+                alignment_mode = "whole_document"
+            resolution = free_ocr.resolve_candidates(blocks)
+        else:
+            blocks = [
+                {"a": line, "b": "", "status": "single_source", "similarity": 0.0}
+                for line in crnn_diacritics.text.splitlines()
+            ]
+            alignment_mode = "crnn_fallback"
+            resolution = free_ocr.ResolutionResult(
+                crnn_diacritics.text.splitlines(),
+                ["A"] * len(blocks),
+                False,
+                "fallback_nuqta_unavailable",
+                error=nuqta_result.error,
+            )
         final = [
-            {"text": line, "flag": "single_local_model", "similarity": 1.0}
-            for line in local_result.lines
+            {
+                "text": line,
+                "flag": "free_resolved" if resolution.accepted else "free_fallback",
+                "similarity": 1.0,
+            }
+            for line in resolution.lines
         ]
         (log_dir / f"{artifact_name}_modelA.txt").write_text(
-            "\n".join(local_result.lines), encoding="utf-8"
+            crnn_raw, encoding="utf-8"
+        )
+        (log_dir / f"{artifact_name}_modelA_diacritized.txt").write_text(
+            crnn_diacritics.text, encoding="utf-8"
+        )
+        (log_dir / f"{artifact_name}_modelB.txt").write_text(
+            nuqta_raw, encoding="utf-8"
+        )
+        (log_dir / f"{artifact_name}_modelB_diacritized.txt").write_text(
+            nuqta_diacritics.text if nuqta_diacritics else "", encoding="utf-8"
+        )
+        (log_dir / f"{artifact_name}_resolved.txt").write_text(
+            "\n".join(resolution.lines), encoding="utf-8"
         )
         # Prevent artifacts from an older dual/evolutionary run looking current.
-        for stale_suffix in ("_modelB.txt", "_draft.txt", "_retry.txt", ".mark.json"):
+        for stale_suffix in ("_diacritized.txt", "_draft.txt", "_retry.txt", ".mark.json"):
             (log_dir / f"{artifact_name}{stale_suffix}").unlink(missing_ok=True)
         output_path.write_text(
             "\n".join(item["text"] for item in final), encoding="utf-8"
         )
         report = {
-            "input": str(image_path),
+            "input": report_path(image_path),
             "source_signature": source_signature(image_path),
             "model_profile": paid_ocr.ACTIVE_MODEL_PROFILE,
             "document_type": "unclassified",
             "classification_confidence": None,
             "model_domain": "Arabic handwriting (KHATT)",
             "models": {
-                "primary": local_ocr.MODEL_NAME,
-                "secondary": None,
-                "recheck": None,
+                "primary": free_ocr.CRNN_MODEL_NAME,
+                "secondary": free_ocr.NUQTA_MODEL_NAME,
+                "recheck": free_ocr.RESOLVER_MODEL,
             },
             "local_ocr": local_result.as_dict(),
+            "nuqta_ocr": nuqta_result.as_dict(),
+            "diacritic_postprocess": {
+                "crnn": crnn_diacritics.as_dict(),
+                "nuqta": (
+                    nuqta_diacritics.as_dict() if nuqta_diacritics else None
+                ),
+            },
+            "free_resolution": resolution.as_dict(),
             "preprocessing": prepared.metadata,
-            "preprocessed_image": str(preprocessed_path),
+            "preprocessed_image": report_path(preprocessed_path),
             "paragraph_detection": {
                 "quality": layout_quality.as_dict(),
                 "boxes": [box.as_dict() for box in paragraph_boxes],
@@ -358,20 +451,38 @@ def process(
             "crop_route": {
                 "attempted": False,
                 "selected": local_result.segmentation,
-                "reason": "local heuristic segmentation followed by KHATT CRNN-CTC only",
+                "reason": (
+                    "KHATT CRNN-CTC and Nuqta run locally; OpenRouter free "
+                    "may edit combining marks and choose A/B blocks only"
+                ),
             },
-            "detected_line_bands": len(local_result.lines),
+            "detected_line_bands": sum(
+                max(1, len(text.splitlines())) for text in resolution.lines
+            ),
+            "free_alignment_mode": alignment_mode,
+            "aligned_blocks": blocks,
             "lines": final,
         }
         (log_dir / f"{artifact_name}.final.json").write_text(
             json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
         )
         print(
-            f"{path}: classification=skipped; primary={local_ocr.MODEL_NAME}; "
-            f"{len(final)} lines; {local_result.elapsed_seconds:.2f}s"
+            f"{path}: classification=skipped; A={free_ocr.CRNN_MODEL_NAME}; "
+            f"B={free_ocr.NUQTA_MODEL_NAME}; {len(final)} lines; "
+            f"CRNN={local_result.elapsed_seconds:.2f}s; "
+            f"Nuqta={nuqta_result.elapsed_seconds:.2f}s; "
+            f"resolve={resolution.status}"
         )
         return output_path
 
+    # Do not leave a free-profile candidate looking current after a paid run.
+    for free_suffix in (
+        "_diacritized.txt",
+        "_modelA_diacritized.txt",
+        "_modelB_diacritized.txt",
+        "_resolved.txt",
+    ):
+        (log_dir / f"{artifact_name}{free_suffix}").unlink(missing_ok=True)
     classification = paid_ocr.classify_document(img)
     primary_model = paid_ocr.select_primary_model(classification["type"])
     print(
@@ -440,7 +551,7 @@ def process(
 
     output_path.write_text("\n".join(item["text"] for item in final), encoding="utf-8")
     output = {
-        "input": str(image_path),
+        "input": report_path(image_path),
         "source_signature": source_signature(image_path),
         "model_profile": paid_ocr.ACTIVE_MODEL_PROFILE,
         "document_type": classification["type"],
@@ -451,7 +562,7 @@ def process(
             "recheck": paid_ocr.MODEL_RECHECK,
         },
         "preprocessing": prepared.metadata,
-        "preprocessed_image": str(preprocessed_path),
+        "preprocessed_image": report_path(preprocessed_path),
         "paragraph_detection": {
             "quality": layout_quality.as_dict(),
             "boxes": [box.as_dict() for box in paragraph_boxes],
@@ -497,8 +608,8 @@ def evolve(
     preprocessed_path = log_dir / f"{artifact_name}_preprocessed.png"
     evaluation_image = preprocessed_path if preprocessed_path.exists() else image_path
     report = mark.run(evaluation_image, candidate_path)
-    report["original_image"] = str(image_path)
-    report["evaluation_image"] = str(evaluation_image)
+    report["original_image"] = report_path(image_path)
+    report["evaluation_image"] = report_path(evaluation_image)
 
     # Preserve both variants and let the evaluator select the authoritative one.
     # If evaluation fails, these writes never run, so the baseline stays usable.
@@ -517,7 +628,7 @@ def evolve(
     accepted = score_better_or_equal and wer_better_or_equal and strictly_better
     report["selection"] = {
         "accepted_retry": accepted,
-        "authoritative_output": str(candidate_path),
+        "authoritative_output": report_path(candidate_path),
         "rule": "score must not decrease, estimated WER must not increase, and one must improve",
     }
     if accepted:
@@ -620,7 +731,7 @@ def process_document(
             "draft_lines": len(baseline_lines),
             "output_lines": len(selected_lines),
             "output_annotation": annotation,
-            "log_directory": str(part_log_dir),
+            "log_directory": report_path(part_log_dir),
         })
         mark_report = part_log_dir / f"{part_name}.mark.json"
         if mark_report.exists():
@@ -641,7 +752,7 @@ def process_document(
             "\n".join(draft_lines), encoding="utf-8"
         )
     report = {
-        "input": str(input_path),
+        "input": report_path(input_path),
         "input_type": input_path.suffix.lower(),
         "source_signature": source_signature(input_path),
         "model_profile": paid_ocr.ACTIVE_MODEL_PROFILE,
@@ -650,7 +761,7 @@ def process_document(
         "typed_parts": sum(part.kind == "text" for part in parts),
         "image_parts": sum(part.kind == "image" for part in parts),
         "output_lines": len(final_lines),
-        "output": str(output_path),
+        "output": report_path(output_path),
     }
     (log_dir / f"{artifact_name}.final.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
@@ -672,7 +783,7 @@ def process_input(
     if paid_ocr.ACTIVE_MODEL_PROFILE == "free" and use_evolution:
         print(
             f"{input_path}: evolutionary retry disabled for --free "
-            "(single local CRNN-CTC model)"
+            "(dual local OCR + constrained free resolver)"
         )
         use_evolution = False
     extension = input_path.suffix.lower()
@@ -741,8 +852,8 @@ def preprocess_only(path: str) -> Path:
     report_path.write_text(
         json.dumps(
             {
-                "input": str(input_path),
-                "output": str(output_path),
+                "input": report_path(input_path),
+                "output": report_path(output_path),
                 "model_profile": paid_ocr.ACTIVE_MODEL_PROFILE,
                 "preprocessing": result.metadata,
                 "paragraph_detection": {
@@ -862,7 +973,11 @@ if __name__ == "__main__":
         else {}
     )
     cost_report = calculate_cost.build_cost_report(
-        {"ocr": paid_ocr.MODEL_USAGE, "translation": translation_usage},
+        {
+            "ocr": paid_ocr.MODEL_USAGE,
+            "free_diacritics": free_ocr.MODEL_USAGE,
+            "translation": translation_usage,
+        },
         command=sys.argv,
     )
     calculate_cost.print_cost_report(cost_report)
