@@ -22,12 +22,10 @@ import xlrd
 from docx import Document
 from docx.table import Table
 from docx.text.paragraph import Paragraph
-from openpyxl import Workbook, load_workbook
-from openpyxl.drawing.image import Image as ExcelImage
+from openpyxl import load_workbook
 from PIL import Image
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
-from pptx.util import Inches
 
 
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"}
@@ -360,23 +358,7 @@ def load_document(path: str | Path) -> list[DocumentPart]:
     raise AssertionError(f"Unhandled extension: {extension}")
 
 
-def classify_image_in_pdf(pdf_path):
-    return [part.summary() for part in _load_pdf(Path(pdf_path))]
-
-
-def classify_image_in_docx(docx_path):
-    return [part.summary() for part in _load_docx(Path(docx_path))]
-
-
-def classify_image_in_pttx(pttx_path):
-    return [part.summary() for part in _load_pptx(Path(pttx_path))]
-
-
-def classify_image_in_xlsx(xlsx_path):
-    return [part.summary() for part in _load_xlsx(Path(xlsx_path))]
-
-
-def pdf_to_images(pdf_path, dpi: int = 220):
+def _pdf_to_images(pdf_path: str | Path, dpi: int = 220) -> list[Image.Image]:
     with pymupdf.open(pdf_path) as document:
         return [_render_pdf_page(page, dpi=dpi) for page in document]
 
@@ -385,17 +367,18 @@ def render_document_pages(path: str | Path, dpi: int = 220) -> list[DocumentPart
     """Render every document page for full-page OCR.
 
     PDF is rendered directly. Office documents are first converted to PDF with
-    LibreOffice so pagination and visual layout are preserved.
+    LibreOffice or Microsoft Office so pagination and visual layout are
+    preserved.
     """
     path = Path(path)
     extension = path.suffix.lower()
     if extension == ".pdf":
-        images = pdf_to_images(path, dpi=dpi)
+        images = _pdf_to_images(path, dpi=dpi)
     elif extension in {".docx", ".doc", ".pptx", ".ppt", ".pttx", ".ptt", ".xlsx", ".xls"}:
         with tempfile.TemporaryDirectory(prefix="arabic_ocr_full_pages_") as temporary:
             pdf_path = Path(temporary) / f"{path.stem}.pdf"
             _office_to_pdf(path, pdf_path)
-            images = pdf_to_images(pdf_path, dpi=dpi)
+            images = _pdf_to_images(pdf_path, dpi=dpi)
     else:
         raise ValueError(
             f"Full-page OCR is not meaningful for {extension or 'this input type'}; "
@@ -405,13 +388,6 @@ def render_document_pages(path: str | Path, dpi: int = 220) -> list[DocumentPart
         DocumentPart("image", image, f"page {page_number}", page_number)
         for page_number, image in enumerate(images, start=1)
     ]
-
-
-def images_to_pdf(images, output_pdf_path):
-    converted = [image.convert("RGB") for image in images]
-    if not converted:
-        raise ValueError("images must not be empty")
-    converted[0].save(output_pdf_path, "PDF", save_all=True, append_images=converted[1:])
 
 
 def _office_to_pdf(input_path, output_pdf_path):
@@ -490,70 +466,3 @@ def _microsoft_office_to_pdf(input_path, output_pdf_path):
 
     if not output_pdf_path.is_file():
         raise RuntimeError(f"Microsoft Office did not create {output_pdf_path}")
-
-
-def docx_to_pdf(docx_path, output_pdf_path):
-    _office_to_pdf(docx_path, output_pdf_path)
-
-
-def pttx_to_pdf(pttx_path, output_pdf_path):
-    _office_to_pdf(pttx_path, output_pdf_path)
-
-
-def pptx_to_pdf(pptx_path, output_pdf_path):
-    _office_to_pdf(pptx_path, output_pdf_path)
-
-
-def xlsx_to_pdf(xlsx_path, output_pdf_path):
-    _office_to_pdf(xlsx_path, output_pdf_path)
-
-
-def pdf_to_docx(pdf_path, output_docx_path):
-    document = Document()
-    for index, image in enumerate(pdf_to_images(pdf_path), start=1):
-        if index > 1:
-            document.add_page_break()
-        stream = io.BytesIO()
-        image.save(stream, format="PNG")
-        stream.seek(0)
-        document.add_picture(stream, width=Inches(6.3))
-    document.save(output_docx_path)
-
-
-def pdf_to_pttx(pdf_path, output_pttx_path):
-    presentation = Presentation()
-    presentation.slide_width = Inches(8.27)
-    presentation.slide_height = Inches(11.69)
-    blank_layout = presentation.slide_layouts[6]
-    for image in pdf_to_images(pdf_path):
-        slide = presentation.slides.add_slide(blank_layout)
-        stream = io.BytesIO()
-        image.save(stream, format="PNG")
-        stream.seek(0)
-        slide.shapes.add_picture(
-            stream, 0, 0, width=presentation.slide_width, height=presentation.slide_height
-        )
-    presentation.save(output_pttx_path)
-
-
-def pdf_to_pptx(pdf_path, output_pptx_path):
-    pdf_to_pttx(pdf_path, output_pptx_path)
-
-
-def pdf_to_xlsx(pdf_path, output_xlsx_path):
-    workbook = Workbook()
-    workbook.remove(workbook.active)
-    with pymupdf.open(pdf_path) as document:
-        for page_number, page in enumerate(document, start=1):
-            worksheet = workbook.create_sheet(f"Page {page_number}")
-            text = _clean_text(page.get_text("text"))
-            if text:
-                for row, line in enumerate(text.splitlines(), start=1):
-                    worksheet.cell(row=row, column=1, value=line)
-            else:
-                image = _render_pdf_page(page)
-                stream = io.BytesIO()
-                image.save(stream, format="PNG")
-                stream.seek(0)
-                worksheet.add_image(ExcelImage(stream), "A1")
-    workbook.save(output_xlsx_path)

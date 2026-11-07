@@ -37,7 +37,7 @@ Tạo `.env` trong thư mục dự án nếu lệnh sẽ gọi OpenRouter:
 OPENROUTER_API_KEY=sk-or-v1-...
 ```
 
-LibreOffice hoặc Microsoft Office + `pywin32` chỉ cần khi chuyển đổi định dạng Office cũ hoặc render toàn trang Office. Poppler chỉ cần cho chức năng dựa trên `pdf2image`; pipeline PDF chính dùng PyMuPDF. Lần đầu dịch local, Transformers sẽ tải các model Helsinki-NLP rồi lưu vào cache cho những lần sau.
+LibreOffice hoặc Microsoft Office + `pywin32` chỉ cần khi chuyển đổi định dạng Office cũ hoặc render toàn trang Office. Việc trích xuất và render PDF dùng trực tiếp PyMuPDF nên không cần Poppler. Lần đầu dịch local, Transformers sẽ tải các model Helsinki-NLP rồi lưu vào cache cho những lần sau.
 
 Profile `--free` dùng `arabicocr-khatt` và Nuqta Arabic OCR 0.8B Q4 qua `llama.cpp`. Chương trình ưu tiên checkpoint fine-tune CRNN trong `models/`. Trên Windows, cài llama.cpp bằng `winget install --id ggml.llamacpp --exact`; lần đầu Nuqta sẽ tải và cache GGUF. Có thể cấu hình `NUQTA_LLAMA_CLI`, `NUQTA_TIMEOUT` và `NUQTA_OFFLINE=1`. Nếu Nuqta lặp, timeout hoặc trả rỗng thì toàn bộ candidate B bị loại và fallback về CRNN.
 

@@ -38,7 +38,7 @@ Create a `.env` file in the project directory when a command will use OpenRouter
 OPENROUTER_API_KEY=sk-or-v1-...
 ```
 
-LibreOffice or Microsoft Office with `pywin32` is only needed for converting legacy Office formats or rendering complete Office pages. Poppler is only needed for `pdf2image` functionality; the primary PDF pipeline uses PyMuPDF. On first use, local translation downloads Helsinki-NLP models through Transformers and caches them.
+LibreOffice or Microsoft Office with `pywin32` is only needed for converting legacy Office formats or rendering complete Office pages. PDF extraction and rendering use PyMuPDF directly, so Poppler is not required. On first use, local translation downloads Helsinki-NLP models through Transformers and caches them.
 
 The `--free` OCR profile uses `arabicocr-khatt` and Nuqta Arabic OCR 0.8B Q4 through `llama.cpp`. It automatically prefers `models/arabicocr-khatt-finetuned/crnn_best.pt`, falls back to `FixFips/arabicocr-khatt`, and can use another checkpoint through `ARABICOCR_KHATT_CHECKPOINT`. Install llama.cpp on Windows with `winget install --id ggml.llamacpp --exact`; the first Nuqta run downloads and caches its GGUF model. Set `NUQTA_LLAMA_CLI`, `NUQTA_TIMEOUT`, or `NUQTA_OFFLINE=1` to override discovery, timeout, or network behavior. Each valid candidate receives a constrained free-model diacritic pass, followed by a free A/B resolver. A repetition loop, timeout, or empty Nuqta result is rejected and falls back to CRNN.
 

@@ -37,7 +37,7 @@ python -m pip install -r requirements.txt
 OPENROUTER_API_KEY=sk-or-v1-...
 ```
 
-لا يلزم LibreOffice أو Microsoft Office مع `pywin32` إلا لتحويل صيغ Office القديمة أو تصيير صفحات Office كاملة. يلزم Poppler فقط للوظائف المبنية على `pdf2image`؛ أما خط PDF الأساسي فيستخدم PyMuPDF. عند أول ترجمة محلية، تنزّل Transformers نماذج Helsinki-NLP وتحفظها في الذاكرة المؤقتة.
+لا يلزم LibreOffice أو Microsoft Office مع `pywin32` إلا لتحويل صيغ Office القديمة أو تصيير صفحات Office كاملة. يستخدم استخراج PDF وتصَييره مكتبة PyMuPDF مباشرة، لذلك لا يلزم Poppler. عند أول ترجمة محلية، تنزّل Transformers نماذج Helsinki-NLP وتحفظها في الذاكرة المؤقتة.
 
 يستخدم `--free` الحزمة `arabicocr-khatt` ونموذج Nuqta Arabic OCR 0.8B Q4 عبر `llama.cpp`. على Windows ثبّت llama.cpp بالأمر `winget install --id ggml.llamacpp --exact`، ويُنزّل GGUF ويُخزن مؤقتاً في أول تشغيل. يمكن ضبط `NUQTA_LLAMA_CLI` و`NUQTA_TIMEOUT` و`NUQTA_OFFLINE=1`. إذا دخل Nuqta في حلقة تكرار أو انتهت المهلة أو أعاد نصاً فارغاً، يُرفض المرشح B كاملاً ويُستخدم CRNN.
 

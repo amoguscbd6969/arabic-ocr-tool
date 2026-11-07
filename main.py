@@ -4,7 +4,7 @@ Paid OCR is isolated in ``paid_ocr.py`` and the local-first free profile is
 isolated in ``free_ocr.py``. This module resolves inputs, coordinates document
 processing, and writes managed logs and outputs.
 
-Setup: pip install requests pillow python-dotenv numpy opencv-python-headless
+Setup: python -m pip install -r requirements.txt
 Run:   python main.py sample.jpg
        python main.py report.pdf --document-mode mixed
        python main.py report.pdf --document-mode full-ocr
