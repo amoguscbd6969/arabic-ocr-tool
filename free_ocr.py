@@ -184,7 +184,10 @@ def recognize_crnn(img: Image.Image) -> LocalOCRResult:
 # Nuqta local candidate
 
 NUQTA_MODEL_REPO = "SalahALHaismawi/Nuqta-Arabic-OCR-0.8B-GGUF:Q4_K_M"
-NUQTA_PROMPT = "Transcribe the Arabic text in this image without any diacritics."
+NUQTA_PROMPT = (
+    "Transcribe the Arabic text in this image exactly as written. Include only "
+    "the diacritics (tashkeel) that are visible in the image."
+)
 
 
 @dataclass
@@ -195,6 +198,7 @@ class NuqtaResult:
     error: str | None = None
     executable: str | None = None
     loop_detected: bool = False
+    warning: str | None = None
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -227,11 +231,36 @@ def _find_nuqta_executable() -> Path:
     )
 
 
-def _has_repetition_loop(text: str) -> bool:
-    compact = re.sub(r"\s+", " ", text)
-    if re.search(r"(.)\1{12,}", compact):
-        return True
-    return bool(re.search(r"(.{2,20})(?:\1){7,}", compact))
+def _truncate_repetition_loop(text: str) -> tuple[str, bool]:
+    """Discard a generated loop while preserving complete preceding lines."""
+    loop_start = None
+    for pattern in (r"(.)\1{12,}", r"(.{2,20})(?:\1){7,}"):
+        match = re.search(pattern, text)
+        if match and (loop_start is None or match.start() < loop_start):
+            loop_start = match.start()
+
+    # Also catch models that repeat a complete line rather than one token.
+    offsets = []
+    normalized_lines = []
+    offset = 0
+    for line in text.splitlines(keepends=True):
+        offsets.append(offset)
+        normalized_lines.append(re.sub(r"\s+", " ", line).strip())
+        offset += len(line)
+    for index in range(3, len(normalized_lines)):
+        repeated = normalized_lines[index]
+        if repeated and all(
+            normalized_lines[index - step] == repeated for step in range(4)
+        ):
+            repeated_lines_start = offsets[index - 2]
+            if loop_start is None or repeated_lines_start < loop_start:
+                loop_start = repeated_lines_start
+            break
+
+    if loop_start is None:
+        return text, False
+    contaminated_line_start = text.rfind("\n", 0, loop_start) + 1
+    return text[:contaminated_line_start].rstrip(), True
 
 
 def _clean_nuqta_output(text: str) -> str:
@@ -241,7 +270,7 @@ def _clean_nuqta_output(text: str) -> str:
 
 
 def recognize_nuqta(img: Image.Image) -> NuqtaResult:
-    """Read one page with Nuqta, rejecting empty or repeating output."""
+    """Read one page with Nuqta and salvage complete lines before a loop."""
     started = time.perf_counter()
     executable = None
     temp_path = None
@@ -288,14 +317,25 @@ def recognize_nuqta(img: Image.Image) -> NuqtaResult:
         text = _clean_nuqta_output(completed.stdout)
         if not text:
             raise RuntimeError("Nuqta returned no transcription")
-        if _has_repetition_loop(text):
+        text, loop_detected = _truncate_repetition_loop(text)
+        if loop_detected:
+            arabic_characters = len(re.findall(r"[\u0600-\u06ff]", text))
+            if arabic_characters < 12:
+                return NuqtaResult(
+                    NUQTA_MODEL_NAME,
+                    [],
+                    time.perf_counter() - started,
+                    error="Nuqta repetition loop started before usable text",
+                    executable=executable.name,
+                    loop_detected=True,
+                )
             return NuqtaResult(
                 NUQTA_MODEL_NAME,
-                [],
+                text.splitlines(),
                 time.perf_counter() - started,
-                error="Nuqta repetition loop detected; candidate rejected",
                 executable=executable.name,
                 loop_detected=True,
+                warning="Nuqta loop suffix removed; complete prefix retained",
             )
         return NuqtaResult(
             NUQTA_MODEL_NAME,

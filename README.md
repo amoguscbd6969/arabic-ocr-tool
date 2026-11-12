@@ -40,7 +40,7 @@ OPENROUTER_API_KEY=sk-or-v1-...
 
 LibreOffice or Microsoft Office with `pywin32` is only needed for converting legacy Office formats or rendering complete Office pages. PDF extraction and rendering use PyMuPDF directly, so Poppler is not required. On first use, local translation downloads Helsinki-NLP models through Transformers and caches them.
 
-The `--free` OCR profile uses `arabicocr-khatt` and Nuqta Arabic OCR 0.8B Q4 through `llama.cpp`. It automatically prefers `models/arabicocr-khatt-finetuned/crnn_best.pt`, falls back to `FixFips/arabicocr-khatt`, and can use another checkpoint through `ARABICOCR_KHATT_CHECKPOINT`. Install llama.cpp on Windows with `winget install --id ggml.llamacpp --exact`; the first Nuqta run downloads and caches its GGUF model. Set `NUQTA_LLAMA_CLI`, `NUQTA_TIMEOUT`, or `NUQTA_OFFLINE=1` to override discovery, timeout, or network behavior. Each valid candidate receives a constrained free-model diacritic pass, followed by a free A/B resolver. A repetition loop, timeout, or empty Nuqta result is rejected and falls back to CRNN.
+The `--free` OCR profile uses `arabicocr-khatt` and Nuqta Arabic OCR 0.8B Q4 through `llama.cpp`. It automatically prefers `models/arabicocr-khatt-finetuned/crnn_best.pt`, falls back to `FixFips/arabicocr-khatt`, and can use another checkpoint through `ARABICOCR_KHATT_CHECKPOINT`. Install llama.cpp on Windows with `winget install --id ggml.llamacpp --exact`; the first Nuqta run downloads and caches its GGUF model. Set `NUQTA_LLAMA_CLI`, `NUQTA_TIMEOUT`, or `NUQTA_OFFLINE=1` to override discovery, timeout, or network behavior. Each valid candidate receives a constrained free-model diacritic pass, followed by a free A/B resolver. If Nuqta loops after complete lines, the repeated suffix is removed and the usable prefix is aligned with CRNN; a loop before usable text, timeout, or empty result falls back to CRNN.
 
 ### 1.2 General syntax
 
@@ -101,7 +101,7 @@ python main.py report.pdf --document-mode full-ocr
 | `--high` | Higher quality | Haiku/Luna for light tasks, Sonnet 5.5 for difficult OCR, Opus 5.5 for adjudication |
 | `--max` | Highest quality and cost | Claude Opus 5.5 and GPT-6 Astra Pro |
 
-Profile flags are mutually exclusive. Under `--free`, candidate A is CRNN-CTC and candidate B is Nuqta 0.8B Q4. Free OpenRouter models may alter combining marks in each candidate, then return only an A/B choice for every locally aligned block. The program copies the chosen candidate verbatim, so the resolver cannot author a third transcription. If Nuqta loops, times out, or is unavailable, the flow falls back to CRNN. If CRNN itself cannot run, the command stops instead of invoking a remote vision model.
+Profile flags are mutually exclusive. Under `--free`, candidate A is CRNN-CTC and candidate B is Nuqta 0.8B Q4. Free OpenRouter models may alter combining marks in each candidate, then return only an A/B choice for every locally aligned block. The program copies the chosen candidate verbatim, so the resolver cannot author a third transcription. A complete Nuqta prefix recovered before a loop remains eligible as a partial candidate; only an unusable, timed-out, or empty result falls back entirely to CRNN. If CRNN itself cannot run, the command stops instead of invoking a remote vision model.
 
 Selection guide:
 
@@ -413,7 +413,7 @@ Planned work includes human-reviewed ground truth, dedicated detectors for handw
 
 - **Do not treat output as a certified legal copy.** Verify names, places, money, dates, clauses, handwriting, seals, and signatures with the original and an Arabic reader.
 - **Choose the right document mode.** `mixed` is the default for files with a good text layer; `full-ocr` is slower and more expensive but helps with scans and broken text layers.
-- **`--free` remains strongest near the models' domains.** CRNN targets KHATT-like handwriting; Nuqta targets broader Arabic documents but may loop on unclear handwriting, in which case its entire candidate is rejected. OpenRouter only edits diacritics or chooses A/B; it never performs vision OCR or invents a third candidate.
+- **`--free` remains strongest near the models' domains.** CRNN targets KHATT-like handwriting; Nuqta targets broader Arabic documents but may loop on unclear handwriting. Complete lines before a detected loop are retained as a partial candidate, while the loop suffix is discarded. OpenRouter only edits diacritics or chooses A/B; it never performs vision OCR or invents a third candidate.
 - **Diacritics and exact WER are different targets.** KHATT references are commonly unvocalized, so adding correct vowel marks can increase strict WER. Use CER/WER on text normalized with the same diacritic policy when comparing checkpoints.
 - **`--translation-mode fast` only removes API use from translation.** OCR may still call the selected profile unless a valid cache exists.
 - **Cache is translation-specific.** Ordinary OCR commands rerun OCR; use `--force-ocr` to bypass cache explicitly during translation.

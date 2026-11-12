@@ -355,7 +355,13 @@ def process(
             compatible_layout = line_count_gap <= max(
                 2, int(max(len(crnn_lines), len(nuqta_lines)) * 0.35)
             )
-            if compatible_layout:
+            if nuqta_result.loop_detected:
+                # A loop-guarded Nuqta result is an incomplete prefix. Align
+                # only its recovered lines; CRNN remains the sole source for
+                # the rest of the page instead of comparing whole documents.
+                blocks = align(crnn_lines, nuqta_lines)
+                alignment_mode = "partial_line_blocks"
+            elif compatible_layout:
                 blocks = align(crnn_lines, nuqta_lines)
                 alignment_mode = "line_blocks"
             else:

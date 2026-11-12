@@ -39,7 +39,7 @@ OPENROUTER_API_KEY=sk-or-v1-...
 
 LibreOffice hoặc Microsoft Office + `pywin32` chỉ cần khi chuyển đổi định dạng Office cũ hoặc render toàn trang Office. Việc trích xuất và render PDF dùng trực tiếp PyMuPDF nên không cần Poppler. Lần đầu dịch local, Transformers sẽ tải các model Helsinki-NLP rồi lưu vào cache cho những lần sau.
 
-Profile `--free` dùng `arabicocr-khatt` và Nuqta Arabic OCR 0.8B Q4 qua `llama.cpp`. Chương trình ưu tiên checkpoint fine-tune CRNN trong `models/`. Trên Windows, cài llama.cpp bằng `winget install --id ggml.llamacpp --exact`; lần đầu Nuqta sẽ tải và cache GGUF. Có thể cấu hình `NUQTA_LLAMA_CLI`, `NUQTA_TIMEOUT` và `NUQTA_OFFLINE=1`. Nếu Nuqta lặp, timeout hoặc trả rỗng thì toàn bộ candidate B bị loại và fallback về CRNN.
+Profile `--free` dùng `arabicocr-khatt` và Nuqta Arabic OCR 0.8B Q4 qua `llama.cpp`. Chương trình ưu tiên checkpoint fine-tune CRNN trong `models/`. Trên Windows, cài llama.cpp bằng `winget install --id ggml.llamacpp --exact`; lần đầu Nuqta sẽ tải và cache GGUF. Có thể cấu hình `NUQTA_LLAMA_CLI`, `NUQTA_TIMEOUT` và `NUQTA_OFFLINE=1`. Nếu Nuqta lặp sau các dòng hoàn chỉnh, phần đuôi lặp bị bỏ và prefix hợp lệ vẫn được align với CRNN; chỉ loop trước khi có text dùng được, timeout hoặc output rỗng mới fallback hoàn toàn về CRNN.
 
 ### 1.2 Cú pháp tổng quát
 
@@ -105,7 +105,7 @@ python main.py report.pdf --document-mode full-ocr
 | `--high` | Chất lượng cao như pipeline ban đầu | Haiku/Luna cho tác vụ nhẹ, Sonnet 5.5 cho OCR khó, Opus 5.5 để adjudicate |
 | `--max` | Chất lượng cao nhất, chi phí cao | Claude Opus 5.5 và GPT-6 Astra Pro |
 
-Các cờ profile loại trừ lẫn nhau. Với `--free`, A là CRNN-CTC và B là Nuqta 0.8B Q4. Các model OpenRouter miễn phí chỉ có thể chỉnh dấu của từng bản rồi trả danh sách lựa chọn A/B cho các block đã align local; chương trình chép nguyên văn ứng viên được chọn nên resolver không thể tự viết bản thứ ba. Nếu Nuqta lặp, timeout hoặc lỗi thì fallback về CRNN. Nếu CRNN lỗi, lệnh dừng thay vì gọi vision API.
+Các cờ profile loại trừ lẫn nhau. Với `--free`, A là CRNN-CTC và B là Nuqta 0.8B Q4. Các model OpenRouter miễn phí chỉ có thể chỉnh dấu của từng bản rồi trả danh sách lựa chọn A/B cho các block đã align local; chương trình chép nguyên văn ứng viên được chọn nên resolver không thể tự viết bản thứ ba. Prefix hoàn chỉnh trước loop của Nuqta vẫn được dùng như candidate partial; output không dùng được, timeout hoặc rỗng mới fallback hoàn toàn về CRNN. Nếu CRNN lỗi, lệnh dừng thay vì gọi vision API.
 
 Chọn nhanh theo nhu cầu:
 
@@ -495,7 +495,7 @@ Các hướng tiếp theo:
 
 - **Không coi output là bản sao pháp lý đã được chứng thực.** Tên người, địa danh, số tiền, ngày tháng, điều khoản, chữ viết tay, con dấu và chữ ký phải được đối chiếu với tài liệu gốc bởi người biết tiếng Ả Rập.
 - **Chọn đúng document mode.** `mixed` là lựa chọn mặc định cho PDF/Office có text layer tốt; `full-ocr` phù hợp với bản scan hoặc text layer sai nhưng sẽ chậm và tốn nhiều API call hơn.
-- **`--free` vẫn phụ thuộc domain.** CRNN phù hợp chữ viết tay gần KHATT; Nuqta rộng hơn nhưng có thể loop trên handwriting khó, khi đó candidate bị loại hoàn toàn. OpenRouter chỉ chỉnh dấu hoặc chọn A/B, không nhìn ảnh và không tạo ứng viên thứ ba.
+- **`--free` vẫn phụ thuộc domain.** CRNN phù hợp chữ viết tay gần KHATT; Nuqta rộng hơn nhưng có thể loop trên handwriting khó. Các dòng hoàn chỉnh trước loop vẫn được giữ làm candidate partial, còn phần đuôi lặp bị loại. OpenRouter chỉ chỉnh dấu hoặc chọn A/B, không nhìn ảnh và không tạo ứng viên thứ ba.
 - **Dấu nguyên âm và exact WER là hai mục tiêu khác nhau.** Ground truth KHATT thường không có tashkeel, nên thêm dấu đúng vẫn có thể làm strict WER tăng. Khi so checkpoint, hãy chuẩn hóa reference và candidate theo cùng chính sách dấu.
 - **`--translation-mode fast` chỉ miễn API cho bước dịch.** Nếu chưa có OCR cache, bước OCR trước đó vẫn gọi model theo profile đã chọn.
 - **Cache không được dùng cho mọi lệnh.** Chương trình chỉ tự phát hiện `final.txt` cũ khi có yêu cầu dịch. Một lệnh OCR thông thường sẽ tạo lại kết quả; dùng `--force-ocr` khi muốn chủ động bỏ cache trong luồng dịch.
