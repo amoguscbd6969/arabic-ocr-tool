@@ -37,8 +37,7 @@ data*.zip
 *.ckpt
 *.safetensors
 models/
-kaggle/*.zip
-kaggle/notebook*.ipynb
+kaggle/*
 
 # Explicit local/private work areas
 private/
